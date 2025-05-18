@@ -126,14 +126,18 @@ async def api_cccd(
     # Paste vào góc trái (toạ độ 10, 10)
     bg.paste(avatar_small, (10, 10), avatar_small)
 
-    # 2. Ảnh lớn: lấy từ Discord, không bo tròn
-    avatar_url = ...  # link ảnh lấy từ Discord
-    import requests, io
-    response = requests.get(avatar_url)
-    avatar_big = Image.open(io.BytesIO(response.content)).resize((128, 128)).convert("RGBA")
+    avatar_url = request.query_params.get('avatar', None)
+    try:
+        if avatar_url and avatar_url.startswith('http'):
+            response = requests.get(avatar_url, timeout=3)
+            avatar_big = Image.open(io.BytesIO(response.content)).resize((128, 128)).convert("RGBA")
+        else:
+            raise Exception("Không có avatar_url hợp lệ")
+    except Exception as e:
+        print("Lỗi avatar lớn:", e)
+        avatar_big = Image.open("2.png").resize((128, 128)).convert("RGBA")
 
-    # Paste vào vị trí tuỳ chỉnh
-    bg.paste(avatar_big, (20, 85))  # KHÔNG có mask => không bo tròn
+    bg.paste(avatar_big, (10, 65))
 
     # ==== Lấy dữ liệu user ====
     smart = user_data[user_id].get("smart", 0)
