@@ -108,40 +108,32 @@ async def api_cccd(
     except:
         bg = Image.new("RGBA", (400, 225), (30, 30, 70, 255))
 
-    # ==== Avatar tròn góc trên trái ====
-    def circular_avatar(url, size=56):
-        try:
-            resp = requests.get(url)
-            img = Image.open(io.BytesIO(resp.content)).convert("RGBA").resize((size, size))
-        except:
-            img = Image.open("1.png").convert("RGBA").resize((size, size))
-        # Crop thành hình tròn
-        mask = Image.new("L", (size, size), 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, size, size), fill=255)
-        avatar = Image.new("RGBA", (size, size))
-        avatar.paste(img, (0, 0), mask)
-        return avatar
+    # 1. Ảnh nhỏ góc trái: luôn là 1.png
+    avatar_small = Image.open("1.png").resize((64, 64)).convert("RGBA")
 
-    # ==== Avatar lớn phía dưới ====
-    def large_avatar(url, size=120):
-        try:
-            resp = requests.get(url)
-            img = Image.open(io.BytesIO(resp.content)).convert("RGBA").resize((size, size))
-        except:
-            img = Image.open("1.png").convert("RGBA").resize((size, size))
-        # Làm mờ, làm tròn góc
-        mask = Image.new("L", (size, size), 0)
+    # Bo tròn nếu muốn (optional)
+    def circle_crop(img):
+        size = img.size
+        mask = Image.new('L', size, 0)
         draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, size, size), fill=255)
-        img.putalpha(mask)
-        return img
+        draw.ellipse((0, 0) + size, fill=255)
+        out = Image.new('RGBA', size)
+        out.paste(img, (0, 0), mask)
+        return out
 
-    # ==== Ghép avatar ====
-    av_top = circular_avatar(avatar, size=56)
-    bg.paste(av_top, (16, 10), mask=av_top)
-    av_big = circular_avatar(avatar, size=100)
-    bg.paste(av_big, (24, 60), mask=av_big)
+    avatar_small = circle_crop(avatar_small)  # Bỏ dòng này nếu không muốn bo tròn
+
+    # Paste vào góc trái (toạ độ 10, 10)
+    bg.paste(avatar_small, (10, 10), avatar_small)
+
+    # 2. Ảnh lớn: lấy từ Discord, không bo tròn
+    avatar_url = ...  # link ảnh lấy từ Discord
+    import requests, io
+    response = requests.get(avatar_url)
+    avatar_big = Image.open(io.BytesIO(response.content)).resize((128, 128)).convert("RGBA")
+
+    # Paste vào vị trí tuỳ chỉnh
+    bg.paste(avatar_big, (20, 85))  # KHÔNG có mask => không bo tròn
 
     # ==== Lấy dữ liệu user ====
     smart = user_data[user_id].get("smart", 0)
