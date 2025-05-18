@@ -551,22 +551,17 @@
   function showTaixiu() {
     document.getElementById("content-box").innerHTML = `
       <div id="taixiu-box">
-        <h3>Chơi tài xỉu</h3>
-        <input type="number" id="ou_bet" placeholder="Số điểm cược" min="1" style="width:120px;">
-        <select id="ou_choice">
-          <option value="t">Tài</option>
-          <option value="x">Xỉu</option>
-        </select>
-        <button onclick="playOu()">Chơi</button>
-        <div id="ouresult" style="margin-top:10px;"></div>
+        <input type="number" id="ou_bet" placeholder="Số tiền cược" style="margin-bottom: 12px; width: 160px;"><br>
+        <button onclick="playOu('t')">Tài</button>
+        <button onclick="playOu('x')">Xỉu</button>
+        <div id="ouresult" style="margin-top:14px;"></div>
       </div>
     `;
   }
-  function playOu() {
+  function playOu(choice) {
     let uid = getUID();
     let bet = document.getElementById("ou_bet").value;
-    let choice = document.getElementById("ou_choice").value;
-    if (!bet || !choice) return alert("Điền đủ điểm cược và chọn Tài/Xỉu!");
+    if (!bet) return alert("Bạn cần nhập số tiền cược!");
     fetch('/api/ou', {
       method: 'POST',
       body: JSON.stringify({ user_id: uid, bet: bet, choice: choice }),
