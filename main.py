@@ -474,7 +474,7 @@ load_dotenv()
 # Các biến sau điền đúng info app Discord của bạn!
 CLIENT_ID = "1362314957714231326"
 CLIENT_SECRET = "C3WiceqvHAFQ3FQ7-mH6oFZbt2pYSVxC"
-REDIRECT_URI = "http://localhost:8000/auth/discord/callback"  # hoặc domain thật nếu deploy
+REDIRECT_URI = "https://meme-xaph.onrender.com/"  # hoặc domain thật nếu deploy
 
 # Route đăng nhập
 @app.get("/login/discord")
