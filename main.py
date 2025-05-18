@@ -92,7 +92,8 @@ async def api_cccd(
     user_id: str,
     avatar: str = Query(default=None),
     username: str = Query(default=None),
-    background: str = Query(default=None)
+    background: str = Query(default=None),
+    request: Request
 ):
     user_data = load_json(USER_DATA_PATH)
     if user_id not in user_data:
