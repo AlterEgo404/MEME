@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Meme App</title>
+  <style>
+    body { font-family: Arial; }
+    #userinfo { margin-top: 10px; }
+  </style>
+  <style>
+  body {
+    background: url('2493c60e-fd04-4745-a94c-d03f4db33c0b.png') center/cover no-repeat,
+                linear-gradient(135deg, #4e1d7c 30%, #a56ff9 100%);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    color: #23272f;
+  }
+  #main-content {
+    margin: 40px auto 0 auto;
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+    max-width: 530px;
+    padding: 32px 34px 24px 34px;
+    text-align: center;
+  }
+  #main-content h3 {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-top: 18px;
+    margin-bottom: 14px;
+    color: #6c36ad;
+  }
+  #main-content input, #main-content select {
+    padding: 7px 13px;
+    border-radius: 8px;
+    border: 1px solid #ccd9ea;
+    font-size: 15px;
+    background: #f7f9fe;
+    margin-bottom: 6px;
+    margin-right: 4px;
+  }
+  #main-content button {
+    background: linear-gradient(90deg, #4f8cff, #39cbe3 80%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 17px;
+    font-size: 15px;
+    margin: 5px 6px 7px 0;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #b6d2ff22;
+    transition: background 0.15s, transform 0.12s;
+  }
+  #main-content button:hover {
+    background: linear-gradient(90deg, #3489f1, #30adc3 80%);
+    transform: translateY(-2px) scale(1.04);
+  }
+
+  #discordinfo, #userinfo {
+    margin: 25px auto 10px auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px #2b304040;
+    padding: 16px 28px 16px 28px;
+    width: 98%;
+    max-width: 420px;
+    text-align: left;
+  }
+  #userinfo img, #discordinfo img {
+    border-radius: 50%;
+    border: 2.5px solid #4f8cff;
+    margin-right: 14px;
+    vertical-align: middle;
+    background: #f8fafc;
+  }
+  #login-box {
+    margin: 80px auto 0 auto;
+    background: rgba(255,255,255,0.08);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(31,38,135,0.28);
+    backdrop-filter: blur(13px);
+    -webkit-backdrop-filter: blur(13px);
+    border: 1.7px solid rgba(255,255,255,0.21);
+    padding: 38px 44px 28px 44px;
+    max-width: 350px;
+    text-align: center;
+  }
+  #login-box h2 {
+    color: #fff;
+    font-size: 2.1rem;
+    font-weight: 700;
+    margin-bottom: 22px;
+    text-shadow: 0 1px 10px #0001;
+    letter-spacing: 1px;
+  }
+  #login-box input[type="text"], 
+  #login-box input[type="password"] {
+    border: none;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 17px;
+    margin-bottom: 16px;
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    font-weight: 500;
+    outline: none;
+    transition: background 0.19s;
+  }
+  #login-box input::placeholder {
+    color: #dad9ec;
+    font-size: 0.98rem;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+  #login-box button {
+    width: 100%;
+    padding: 13px 0;
+    border-radius: 22px;
+    font-size: 1.13rem;
+    background: linear-gradient(90deg, #9c70f9, #65d7fa 90%);
+    margin: 14px 0 8px 0;
+    font-weight: 600;
+    box-shadow: 0 4px 20px #a675fc35;
+  }
+  #login-box button:hover {
+    background: linear-gradient(90deg, #8c56e9, #37b5ee 90%);
+    transform: scale(1.04);
+  }
+  #login-box .register-link {
+    color: #f5f2ff;
+    font-size: 1.01rem;
+    margin-top: 16px;
+    text-shadow: 0 1px 8px #2d014c22;
+  }
+  #login-box .register-link a {
+    color: #60dcff;
+    text-decoration: underline;
+    font-weight: 600;
+    transition: color 0.12s;
+  }
+  #login-box .register-link a:hover { color: #fff }
+  button {
+    background: linear-gradient(90deg, #4f8cff, #39cbe3 80%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 15px;
+    margin: 5px 6px 7px 0;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #b6d2ff22;
+    transition: background 0.15s, transform 0.12s;
+  }
+  button:hover {
+    background: linear-gradient(90deg, #3489f1, #30adc3 80%);
+    transform: translateY(-2px) scale(1.04);
+  }
+  #functions {
+    margin: 10px auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px #2b304040;
+    padding: 22px 30px;
+    max-width: 430px;
+    text-align: center;
+  }
+  #msg {
+    margin: 14px auto;
+    color: #d8214a;
+    font-weight: 500;
+    text-align: center;
+  }
+  ul, li {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  ul {
+    margin: 7px 0 18px 0;
+  }
+  li {
+    background: #f3f8ff;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    padding: 7px 13px;
+    font-size: 15px;
+    color: #295079;
+  }
+  h1, h3 {
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #2d3a5c;
+    margin-top: 16px;
+  }
+  input[type="number"], select {
+    padding: 7px 13px;
+    border-radius: 8px;
+    border: 1px solid #ccd9ea;
+    font-size: 15px;
+    background: #f8fafc;
+    margin-bottom: 6px;
+  }
+  #cccdimg {
+    display: block;
+    margin: 22px auto 10px auto;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px #b2bbdd44;
+    max-width: 410px;
+  }
+  #taixiu-box, #hunt-box {
+    background: #f6faff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px #a69efc13;
+    padding: 18px 24px;
+    max-width: 420px;
+    margin: 0 auto 24px auto;
+    text-align: left;
+  }
+  #taixiu-box h3, #hunt-box h3 {
+    color: #6c36ad;
+    margin-bottom: 12px;
+    margin-top: 0;
+    font-size: 1.1rem;
+  }
+  @media (max-width: 600px) {
+    #login-box, #functions, #discordinfo, #userinfo {
+      max-width: 98vw;
+      padding: 10vw 2vw;
+    }
+    h1 { font-size: 22px; }
+  }
+  </style>
+</head>
+<body>
+  <h1>Meme App</h1>
+  
+  <!-- Đăng nhập/Đăng ký -->
+  <div id="login-box">
+    <h2>Login</h2>
+    <button onclick="window.location='/login/discord'">Đăng nhập bằng Discord</button>
+  </div>
+
+  <!-- MAIN CONTENT, chỉ hiện khi đăng nhập -->
+  <div id="main-content">
+    <!-- Dãy nút chức năng -->
+    <div id="functions">
+      <button onclick="daily()">Nhận quà Daily</button>
+      <button onclick="getShop()">Xem Shop</button>
+      <button onclick="showJar()">Xem hũ Jackpot</button>
+      <button onclick="showCCCD()">Xem ảnh CCCD</button>
+      <button onclick="showLeaderboard()">Xem bảng xếp hạng</button>
+      <button onclick="study()">Học tăng trình độ</button>
+      <button onclick="showTaixiu()">Tài xỉu</button>
+      <button onclick="showHunt()">Đi săn</button>
+      <button onclick="logout()">Đăng xuất</button>
+    </div>
+    <div id="userinfo"></div>
+    <div id="content-box"></div>
+  </div>
+
+    <!-- Thông tin tài khoản -->
+    <div id="userinfo"></div>
+    <ul id="shopinfo"></ul>
+    <ul id="lbinfo"></ul>
+    <p id="jackpot"></p>
+  </div>
+  <!-- Ảnh CCCD -->
+  <img id="cccdimg" width="400" style="margin:22px auto 10px auto; display:block;">
+  <script>
+  function hunt() {
+    let uid = getUID();
+    let weapon = document.getElementById("hunt_weapon").value;
+    fetch('/api/hunt', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: uid, weapon: weapon }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      let box = document.getElementById("huntresult");
+      box.innerText = data.msg;
+      getUserInfo();
+    });
+  }
+  </script>
+  <script>
+
+    // Có thể lấy info từ localStorage để auto đăng nhập mọi lần sau
+    window.onload = function() {
+      let uid = localStorage.getItem('uid');
+      if(uid) {
+        setUser(uid);
+        document.getElementById("login-box").style.display = "none";
+        document.getElementById("main-content").style.display = "";
+      } else {
+        document.getElementById("login-box").style.display = "";
+        document.getElementById("main-content").style.display = "none";
+      }
+    }
+  </script>
+  <p id="msg"></p>
+  <script>
+
+    // Đăng ký tài khoản
+    function register() {
+      var uid = document.getElementById("uid").value;
+      if (!uid) return alert('Vui lòng nhập user_id!');
+      fetch('/api/start', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: uid }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("msg").innerText = data.msg;
+        if (data.success) {
+          setUser(uid);
+        }
+      });
+    }
+
+    // Đăng nhập (chỉ kiểm tra có tồn tại user_id)
+    function login() {
+      var uid = document.getElementById("uid").value;
+      if (!uid) return alert('Vui lòng nhập user_id!');
+      fetch('/api/user/' + uid)
+      .then(res => res.json())
+      .then(user => {
+        if (user.success) {
+          document.getElementById("msg").innerText = "Đăng nhập thành công!";
+          setUser(uid);
+        } else {
+          document.getElementById("msg").innerText = "Không tìm thấy tài khoản. Hãy đăng ký trước.";
+        }
+      });
+    }
+
+    // Thiết lập session
+    function setUser(uid) {
+      localStorage.setItem('uid', uid);
+      document.getElementById('login-box').style.display = 'none';
+      document.getElementById('main-content').style.display = '';
+      getUserInfo();
+      document.getElementById("shopinfo").innerHTML = "";
+      document.getElementById("msg").innerText = "";
+      // Hiện luôn avatar và tên Discord
+      let avatar = localStorage.getItem('avatar');
+      let username = localStorage.getItem('username');
+      if (avatar && username) {
+        document.getElementById("userinfo").innerHTML =
+          `<img src="${avatar}" width="50" style="border-radius:50%;vertical-align:middle"> 
+          <b>${username}</b> (Discord ID: ${uid})`;
+      }
+    }
+
+    // Đăng xuất
+    function logout() {
+      localStorage.removeItem('uid');
+      localStorage.removeItem('avatar');
+      localStorage.removeItem('username');
+      document.getElementById('login-box').style.display = '';
+      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('userinfo').innerHTML = '';
+      document.getElementById('shopinfo').innerHTML = '';
+    }
+
+    // Lấy uid hiện tại
+    function getUID() {
+      return localStorage.getItem('uid');
+    }
+
+    // Hiện thông tin user
+    function getUserInfo() {
+      let uid = getUID();
+      let avatar = localStorage.getItem('avatar');
+      let username = localStorage.getItem('username');
+      if (!uid) return;
+      fetch('/api/user/' + uid)
+      .then(res => res.json())
+      .then(user => {
+        if(user.success){
+          let html = "";
+          
+          // Hiện avatar + username Discord
+          if (avatar && username) {
+            html += `<img src="${avatar}" width="50" style="border-radius:50%;vertical-align:middle"> <b>${username}</b> (Discord ID: ${uid})<br>`;
+          }
+          html += "<b>Thông tin tài khoản:</b><br>";
+          html += "Điểm: " + user.points + "<br>";
+          html += "Smart: " + user.smart + "<br>";
+          html += "Items: ";
+          if (Object.keys(user.items).length > 0) {
+            html += "<ul>";
+            for(let key in user.items) {
+              html += "<li>" + key + ": " + user.items[key] + "</li>";
+            }
+            html += "</ul>";
+          } else {
+            html += " (Trống)";
+          }
+          document.getElementById("userinfo").innerHTML = html;
+        }
+      });
+    }
+
+    // Nhận quà daily
+    function daily() {
+      let uid = getUID();
+      fetch('/api/daily', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: uid }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("content-box").innerHTML = `<div>${data.msg}</div>`;
+          if (data.success) getUserInfo();
+        });
+    }
+
+    // Hiện shop, cho phép vừa mua vừa bán
+    function getShop() {
+      let uid = getUID();
+      fetch('/api/user/' + uid)
+        .then(res => res.json())
+        .then(user => {
+          if (!user.success) return;
+          let userItems = user.items || {};
+          fetch('/api/shop')
+            .then(res => res.json())
+            .then(data => {
+              let html = "<ul>";
+              for (let id in data.shop) {
+                let sp = data.shop[id];
+                let own = userItems[sp.name] || 0;
+                html += `<li>
+                  ${sp.name} - Giá: ${sp.price} 
+                  <button onclick="buyItem('${id}')">Mua</button>
+                  ${own > 0 ? `
+                    <button onclick="sellItemPrompt('${id}', '${sp.name}', ${own})">Bán</button>
+                    (Bạn có: ${own})
+                  ` : ""}
+                </li>`;
+              }
+              html += "</ul>";
+              document.getElementById("content-box").innerHTML = html;
+            });
+        });
+    }
+
+    // Mua item trong shop
+    function buyItem(id) {
+      let uid = getUID();
+      let sl = prompt("Nhập số lượng muốn mua:", 1);
+      if (!sl || isNaN(sl) || Number(sl) < 1) return;
+      fetch('/api/buy', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: uid, item_id: id, quantity: Number(sl) }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.msg);
+        getUserInfo();
+        getShop(); // cập nhật lại shop cho chính xác số lượng
+      });
+    }
+
+    // Bán item trong shop (sử dụng prompt để nhập số lượng)
+    function sellItemPrompt(item_id, item_name, maxQty) {
+      let uid = getUID();
+      let sl = prompt(`Nhập số lượng muốn bán (Bạn có: ${maxQty}):`, 1);
+      if (!sl || isNaN(sl) || Number(sl) < 1) return;
+      if (Number(sl) > maxQty) return alert("Bạn không có đủ vật phẩm để bán!");
+      fetch('/api/sell', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: uid, item_id: item_id, quantity: Number(sl) }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.msg);
+        getUserInfo();
+        getShop(); // cập nhật lại shop cho chính xác số lượng
+      });
+    }
+  </script>
+  <p id="jackpot"></p>
+  <script>
+  function showJar() {
+    fetch('/api/jar')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("content-box").innerHTML =
+            `<p style="font-size:20px; color:#c88c0c;">💰 Jackpot hiện tại: <b>${data.jackpot_fmt} coin</b></p>`;
+        }
+      });
+  }
+  </script>
+  <br>
+  <img id="cccdimg" width="400" style="margin-top:10px;">
+  <script>
+  function showCCCD() {
+    let uid = getUID();
+    let avatar = localStorage.getItem('avatar');
+    let username = localStorage.getItem('username');
+    let url = '/api/cccd/' + uid +
+      '?avatar=' + encodeURIComponent(avatar) +
+      '&username=' + encodeURIComponent(username) +
+      '&rand=' + Math.random();
+    document.getElementById("content-box").innerHTML =
+      `<img id="cccdimg" width="400" style="margin:22px auto 10px auto; display:block;" src="${url}">`;
+  }
+  </script>
+  <script>
+  function showLeaderboard() {
+    fetch('/api/leaderboard/a')
+      .then(res => res.json())
+      .then(data => {
+        let html = "<ul>";
+        for (let u of data.leaderboard) {
+          html += `<li>User: ${u.user_id} – Điểm: ${u.value}</li>`;
+        }
+        html += "</ul>";
+        document.getElementById("content-box").innerHTML = html;
+      });
+  }
+  </script>
+  <script>
+  function study() {
+    let uid = getUID();
+    fetch('/api/study', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: uid }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.msg);
+      getUserInfo();
+    });
+  }
+  </script>
+  <script>
+  function showTaixiu() {
+    document.getElementById("content-box").innerHTML = `
+      <div id="taixiu-box">
+        <h3>Chơi tài xỉu</h3>
+        <input type="number" id="ou_bet" placeholder="Số điểm cược" min="1" style="width:120px;">
+        <select id="ou_choice">
+          <option value="t">Tài</option>
+          <option value="x">Xỉu</option>
+        </select>
+        <button onclick="playOu()">Chơi</button>
+        <div id="ouresult" style="margin-top:10px;"></div>
+      </div>
+    `;
+  }
+  function playOu() {
+    let uid = getUID();
+    let bet = document.getElementById("ou_bet").value;
+    let choice = document.getElementById("ou_choice").value;
+    if (!bet || !choice) return alert("Điền đủ điểm cược và chọn Tài/Xỉu!");
+    fetch('/api/ou', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: uid, bet: bet, choice: choice }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      let resBox = document.getElementById("ouresult");
+      if (!data.success) {
+        resBox.innerText = data.msg;
+      } else {
+        resBox.innerHTML = `<b>${data.win ? "🎉 Thắng!" : "💀 Thua!"}</b><br>
+          Kết quả: ${data.dice[0]}, ${data.dice[1]}, ${data.dice[2]} (Tổng: ${data.total})<br>
+          ${data.msg}`;
+        getUserInfo();
+      }
+    });
+  }
+  </script>
+  <script>
+  function showHunt() {
+    document.getElementById("content-box").innerHTML = `
+      <div id="hunt-box">
+        <h3>Đi săn</h3>
+        <select id="hunt_weapon">
+          <option value="g">Súng săn</option>
+          <option value="a">Awm</option>
+          <option value="r">RPG</option>
+          <option value="c">Máy hút bụi</option>
+        </select>
+        <button onclick="hunt()">Săn</button>
+        <div id="huntresult" style="margin-top:10px;"></div>
+      </div>
+    `;
+  }
+  function hunt() {
+    let uid = getUID();
+    let weapon = document.getElementById("hunt_weapon").value;
+    fetch('/api/hunt', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: uid, weapon: weapon }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      let box = document.getElementById("huntresult");
+      box.innerText = data.msg;
+      getUserInfo();
+    });
+  }
+  </script>
+</body>
+</html>
