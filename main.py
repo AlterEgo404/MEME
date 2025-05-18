@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse, RedirectResponse, HTMLResponse
 import json
@@ -89,11 +89,11 @@ async def api_jar():
 
 @app.get("/api/cccd/{user_id}")
 async def api_cccd(
+    request: Request,
     user_id: str,
     avatar: str = Query(default=None),
     username: str = Query(default=None),
-    background: str = Query(default=None),
-    request: Request
+    background: str = Query(default=None)
 ):
     user_data = load_json(USER_DATA_PATH)
     if user_id not in user_data:
