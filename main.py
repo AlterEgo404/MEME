@@ -17,16 +17,21 @@ MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://Ego:MEME@meme.j5dfnh0.mongodb.
 client = MongoClient(MONGO_URL)
 db = client["MEME"]         # Tên database của bạn
 user_col = db["user"]       # Tên collection (giống như table trong SQL)
+misc_col = db["misc"]       # Nếu chưa có sẽ tự tạo
 
 app = FastAPI()
-USER_DATA_PATH = "user_data.json"
-SHOP_DATA_PATH = "shop_data.json"
+
+with open("shop_data.json", "r", encoding="utf-8") as f:
+    shop_data = json.load(f)
 
 def get_user(user_id):
     return user_col.find_one({"_id": user_id})
 
 def save_user(user_id, data):
     user_col.update_one({"_id": user_id}, {"$set": data}, upsert=True)
+
+def set_jackpot(amount):
+    misc_col.update_one({"_id": "jackpot"}, {"$set": {"value": amount}}, upsert=True)
 
 def calculate_level_and_progress(smart):
     level, need = 1, 50
@@ -52,33 +57,44 @@ async def api_shop():
 
 @app.get("/api/user/{user_id}")
 async def api_get_user(user_id: str):
-    user_data = load_json(USER_DATA_PATH)
-    if user_id not in user_data:
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "Không tìm thấy user"}
-    data = user_data[user_id]
     return {
         "success": True,
-        "points": data.get("points", 0),
-        "items": data.get("items", {}),
-        "smart": data.get("smart", 0)
+        "points": user.get("points", 0),
+        "items": user.get("items", {}),
+        "smart": user.get("smart", 0)
     }
 
 @app.get("/api/leaderboard/{kind}")
 async def api_leaderboard(kind: str = "a"):
-    user_data = load_json(USER_DATA_PATH)
-    key = {"a": "points", "o": "company_balance", "s": "smart"}.get(kind, "points")
-    users = [
-        {"user_id": uid, "value": data.get(key, 0)}
-        for uid, data in user_data.items() if isinstance(data, dict)
-    ]
+    key_map = {"a": "points", "o": "company_balance", "s": "smart"}
+    sort_key = key_map.get(kind, "points")
+
+    # Query tất cả user, chỉ lấy field cần thiết
+    users = list(user_col.find({}, {"_id": 1, sort_key: 1}))
+    
+    # Đảm bảo mỗi user có giá trị (nếu thiếu thì gán 0)
+    for u in users:
+        u["user_id"] = u["_id"]
+        u["value"] = u.get(sort_key, 0)
+    
+    # Sắp xếp giảm dần theo value
     users.sort(key=lambda x: x["value"], reverse=True)
-    return {"success": True, "leaderboard": users}
+    # Nếu muốn lấy top N, dùng users[:N]
+    
+    # Trả về đúng format
+    return {
+        "success": True,
+        "leaderboard": [{"user_id": u["user_id"], "value": u["value"]} for u in users]
+    }
 
 @app.get("/api/jar")
 async def api_jar():
-    user_data = load_json(USER_DATA_PATH)
-    jackpot_amount = user_data.get('jackpot', 0)
-    # Định dạng số đẹp như bot:
+    doc = misc_col.find_one({"_id": "jackpot"})
+    jackpot_amount = doc["value"] if doc and "value" in doc else 0
+
     def format_currency(amount):
         return f"{amount:,.0f}".replace(",", " ")
     return {
@@ -95,8 +111,9 @@ async def api_cccd(
     username: str = Query(default=None),
     background: str = Query(default=None)
 ):
-    user_data = load_json(USER_DATA_PATH)
-    if user_id not in user_data:
+    # ==== Lấy user từ MongoDB ====
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "User không tồn tại!"}
 
     # ==== Load background galaxy ====
@@ -105,14 +122,12 @@ async def api_cccd(
             response = requests.get(background)
             bg = Image.open(io.BytesIO(response.content)).convert("RGBA").resize((400, 225))
         else:
-            bg = Image.open("galaxy.png").convert("RGBA").resize((400, 225))  # Để galaxy.png trong thư mục app!
+            bg = Image.open("galaxy.png").convert("RGBA").resize((400, 225))
     except:
         bg = Image.new("RGBA", (400, 225), (30, 30, 70, 255))
 
     # 1. Ảnh nhỏ góc trái: luôn là 1.png
     avatar_small = Image.open("1.png").resize((64, 64)).convert("RGBA")
-
-    # Bo tròn nếu muốn (optional)
     def circle_crop(img):
         size = img.size
         mask = Image.new('L', size, 0)
@@ -121,13 +136,11 @@ async def api_cccd(
         out = Image.new('RGBA', size)
         out.paste(img, (0, 0), mask)
         return out
-
-    avatar_small = circle_crop(avatar_small)  # Bỏ dòng này nếu không muốn bo tròn
-
-    # Paste vào góc trái (toạ độ 10, 10)
+    avatar_small = circle_crop(avatar_small)
     bg.paste(avatar_small, (10, 10), avatar_small)
 
-    avatar_url = request.query_params.get('avatar', None)
+    # 2. Ảnh lớn: avatar Discord hoặc fallback "2.png"
+    avatar_url = avatar if avatar else None
     try:
         if avatar_url and avatar_url.startswith('http'):
             response = requests.get(avatar_url, timeout=3)
@@ -138,12 +151,13 @@ async def api_cccd(
         print("Lỗi avatar lớn:", e)
         avatar_big = Image.open("2.png").resize((128, 128)).convert("RGBA")
 
+    # Chỉnh vị trí tại đây (vd: (10, 65))
     bg.paste(avatar_big, (10, 65))
 
-    # ==== Lấy dữ liệu user ====
-    smart = user_data[user_id].get("smart", 0)
-    level, progress, next_lv = calculate_level_and_progress(smart)  # Bạn cần thêm hàm này!
-    role_name = get_role_name(level)  # Viết hàm này dựa vào level
+    # ==== Dữ liệu user ====
+    smart = user.get("smart", 0)
+    level, progress, next_lv = calculate_level_and_progress(smart)
+    role_name = get_role_name(level)
 
     # ==== Font ====
     font_path = "Roboto-Black.ttf"
@@ -181,26 +195,25 @@ async def api_cccd(
     out.seek(0)
     return StreamingResponse(out, media_type="image/png")
 
-@app.get("/api/leaderboard/{kind}")
-async def api_leaderboard(kind: str = "a"):
-    user_data = load_json(USER_DATA_PATH)
-    key = {"a": "points", "o": "company_balance", "s": "smart"}.get(kind, "points")
-    users = [
-        {"user_id": uid, "value": data.get(key, 0)}
-        for uid, data in user_data.items() if isinstance(data, dict)
-    ]
-    users.sort(key=lambda x: x["value"], reverse=True)
-    return {"success": True, "leaderboard": users}
-
 @app.post("/api/start")
 async def api_start(request: Request):
     data = await request.json()
     user_id = str(data["user_id"])
-    user_data = load_json(USER_DATA_PATH)
-    if user_id in user_data:
+    
+    # Kiểm tra tài khoản đã tồn tại chưa
+    existing = user_col.find_one({"_id": user_id})
+    if existing:
         return {"success": False, "msg": "Tài khoản đã tồn tại."}
-    user_data[user_id] = {"points": 10000, "items": {}, "smart": 100}
-    save_json(USER_DATA_PATH, user_data)
+
+    # Khởi tạo tài khoản mới
+    user_doc = {
+        "_id": user_id,
+        "points": 10000,
+        "items": {},
+        "smart": 100
+    }
+    user_col.insert_one(user_doc)
+
     return {"success": True, "msg": "Tạo tài khoản thành công!"}
 
 @app.post("/api/buy")
@@ -209,23 +222,31 @@ async def api_buy(request: Request):
     user_id = str(data["user_id"])
     item_id = data["item_id"]
     quantity = int(data["quantity"])
-    user_data = load_json(USER_DATA_PATH)
-    shop_data = load_json(SHOP_DATA_PATH)
-    if user_id not in user_data:
+
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "Bạn chưa có tài khoản!"}
     if item_id not in shop_data:
         return {"success": False, "msg": "Không tìm thấy sản phẩm!"}
     if quantity <= 0:
         return {"success": False, "msg": "Số lượng phải lớn hơn 0!"}
     total_price = shop_data[item_id]["price"] * quantity
-    if total_price > user_data[user_id]["points"]:
+    if total_price > user.get("points", 0):
         return {"success": False, "msg": "Bạn không đủ tiền!"}
-    # Cập nhật
-    user_data[user_id]["points"] -= total_price
     name = shop_data[item_id]["name"]
-    user_items = user_data[user_id].setdefault("items", {})
+    user_items = user.get("items", {})
     user_items[name] = user_items.get(name, 0) + quantity
-    save_json(USER_DATA_PATH, user_data)
+
+    # Update user
+    user_col.update_one(
+        {"_id": user_id},
+        {
+            "$set": {
+                "points": user["points"] - total_price,
+                "items": user_items
+            }
+        }
+    )
     return {"success": True, "msg": f"Bạn đã mua {quantity} {name}."}
 
 @app.post("/api/sell")
@@ -234,9 +255,9 @@ async def api_sell(request: Request):
     user_id = str(data["user_id"])
     item_id = data["item_id"]
     quantity = int(data["quantity"])
-    user_data = load_json(USER_DATA_PATH)
-    shop_data = load_json(SHOP_DATA_PATH)
-    if user_id not in user_data:
+
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "Bạn chưa có tài khoản!"}
     if item_id not in shop_data:
         return {"success": False, "msg": "Không tìm thấy sản phẩm trong cửa hàng!"}
@@ -244,7 +265,7 @@ async def api_sell(request: Request):
         return {"success": False, "msg": "Số lượng phải lớn hơn 0!"}
 
     item_name = shop_data[item_id]["name"]
-    user_items = user_data[user_id].get("items", {})
+    user_items = user.get("items", {})
     current_quantity = user_items.get(item_name, 0)
     if current_quantity < quantity:
         return {"success": False, "msg": "Bạn không có đủ vật phẩm để bán!"}
@@ -255,110 +276,108 @@ async def api_sell(request: Request):
         del user_items[item_name]
 
     # Xóa company_balance nếu bán hết Công ty
-    if item_id == "01" and "company_balance" in user_data[user_id]:
+    update_fields = {
+        "points": user["points"] + selling_price,
+        "items": user_items
+    }
+    if item_id == "01" and "company_balance" in user:
         if user_items.get(":office: Công ty", 0) == 0:
-            del user_data[user_id]["company_balance"]
+            update_fields["company_balance"] = None
 
-    user_data[user_id]["points"] += selling_price
-    user_data[user_id]["items"] = user_items
-    save_json(USER_DATA_PATH, user_data)
+    user_col.update_one(
+        {"_id": user_id},
+        {"$set": update_fields}
+    )
     return {
         "success": True,
         "msg": f"Bạn đã bán {quantity} {item_name} và nhận được {selling_price} coin!"
     }
 
-@app.post("/api/sell")
-async def api_sell(request: Request):
-    data = await request.json()
-    user_id = str(data["user_id"])
-    item_id = data["item_id"]
-    quantity = int(data["quantity"])
-    user_data = load_json(USER_DATA_PATH)
-    shop_data = load_json(SHOP_DATA_PATH)
-    if user_id not in user_data:
-        return {"success": False, "msg": "Bạn chưa có tài khoản!"}
-    if item_id not in shop_data:
-        return {"success": False, "msg": "Không tìm thấy sản phẩm!"}
-    if quantity <= 0:
-        return {"success": False, "msg": "Số lượng phải lớn hơn 0!"}
-    item_name = shop_data[item_id]["name"]
-    user_items = user_data[user_id].get("items", {})
-    if user_items.get(item_name, 0) < quantity:
-        return {"success": False, "msg": "Không đủ vật phẩm để bán!"}
-    selling_price = round(shop_data[item_id]["price"] * quantity * 0.9)
-    user_items[item_name] -= quantity
-    user_data[user_id]["points"] += selling_price
-    save_json(USER_DATA_PATH, user_data)
-    return {"success": True, "msg": f"Bán thành công, nhận {selling_price} điểm!"}
-
 @app.post("/api/daily")
 async def api_daily(request: Request):
     data = await request.json()
     user_id = str(data["user_id"])
-    user_data = load_json(USER_DATA_PATH)
     now = datetime.datetime.now()
-    if user_id not in user_data:
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "Bạn chưa có tài khoản!"}
-    last_daily = user_data[user_id].get('last_daily')
+    last_daily = user.get('last_daily')
+    streak = user.get('streak', 1)
     if last_daily is not None:
         last_daily_date = datetime.datetime.strptime(last_daily, "%Y-%m-%d")
         if last_daily_date.date() == now.date():
             return {"success": False, "msg": "Bạn đã nhận quà hằng ngày rồi. Vui lòng thử lại vào ngày mai."}
         elif (now - last_daily_date).days == 1:
-            user_data[user_id]['streak'] = user_data[user_id].get('streak', 1) + 1
+            streak += 1
         else:
-            user_data[user_id]['streak'] = 1
+            streak = 1
     else:
-        user_data[user_id]['streak'] = 1
+        streak = 1
     base_reward = 5000
-    streak_bonus = user_data[user_id]['streak'] * 100
+    streak_bonus = streak * 100
     total_reward = base_reward + streak_bonus
-    user_data[user_id]['points'] += total_reward
-    user_data[user_id]['last_daily'] = now.strftime("%Y-%m-%d")
-    save_json(USER_DATA_PATH, user_data)
-    return {"success": True, "msg": f"Bạn đã nhận {total_reward} điểm! (Thưởng streak: {streak_bonus}, chuỗi ngày: {user_data[user_id]['streak']})"}
+    user_col.update_one(
+        {"_id": user_id},
+        {
+            "$set": {
+                "points": user.get('points', 0) + total_reward,
+                "last_daily": now.strftime("%Y-%m-%d"),
+                "streak": streak
+            }
+        }
+    )
+    return {"success": True, "msg": f"Bạn đã nhận {total_reward} điểm! (Thưởng streak: {streak_bonus}, chuỗi ngày: {streak})"}
 
 @app.post("/api/prog")
 async def api_prog(request: Request):
     import random
     data = await request.json()
     user_id = str(data["user_id"])
-    user_data = load_json(USER_DATA_PATH)
     now = datetime.datetime.now()
-    if user_id not in user_data:
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "Bạn chưa có tài khoản!"}
-    last_beg = user_data[user_id].get('last_beg')
+    last_beg = user.get('last_beg')
+    beg_amount = 0
     if last_beg is not None:
         cooldown_time = 3 * 60
         time_elapsed = (now - datetime.datetime.strptime(last_beg, "%Y-%m-%d %H:%M:%S")).total_seconds()
         if time_elapsed < cooldown_time:
             minutes, seconds = divmod(int(cooldown_time - time_elapsed), 60)
             return {"success": False, "msg": f"Bạn đã ăn xin rồi, vui lòng thử lại sau {minutes} phút {seconds} giây."}
-    if user_data[user_id]['points'] < 100000:
+    if user['points'] < 100000:
         beg_amount = random.randint(0, 5000)
-        user_data[user_id]['points'] += beg_amount
+        new_points = user['points'] + beg_amount
     else:
         return {"success": False, "msg": 'Bạn quá giàu để ăn xin!'}
-    user_data[user_id]['last_beg'] = now.strftime("%Y-%m-%d %H:%M:%S")
-    save_json(USER_DATA_PATH, user_data)
+    user_col.update_one(
+        {"_id": user_id},
+        {
+            "$set": {
+                "points": new_points,
+                "last_beg": now.strftime("%Y-%m-%d %H:%M:%S")
+            }
+        }
+    )
     return {"success": True, "msg": f"Bạn đã nhận được {beg_amount} điểm từ việc ăn xin!"}
 
 @app.post("/api/ou")
 async def api_ou(request: Request):
+    import random
     data = await request.json()
     user_id = str(data["user_id"])
     bet = data["bet"]
     choice = data["choice"].lower()
-    user_data = load_json(USER_DATA_PATH)
-    if user_id not in user_data:
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "Bạn chưa có tài khoản!"}
     if isinstance(bet, str) and bet.lower() == 'all':
-        bet = user_data[user_id]['points']
+        bet = user['points']
     try:
         bet = int(bet)
     except Exception:
         return {"success": False, "msg": "Số điểm cược không hợp lệ!"}
-    if bet <= 0 or bet > user_data[user_id]['points']:
+    if bet <= 0 or bet > user['points']:
         return {"success": False, "msg": "Bạn không đủ tiền để cược!"}
     if choice not in ["t", "x"]:
         return {"success": False, "msg": "Bạn phải chọn 't' (Tài) hoặc 'x' (Xỉu)!"}
@@ -369,12 +388,13 @@ async def api_ou(request: Request):
         dice = [random.randint(1,6) for _ in range(3)]
     total = sum(dice)
     win = False
+    new_points = user['points']
     if (3 <= total <= 10 and choice == "x") or (11 <= total <= 18 and choice == "t"):
-        user_data[user_id]['points'] += bet
+        new_points += bet
         win = True
     else:
-        user_data[user_id]['points'] -= bet
-    save_json(USER_DATA_PATH, user_data)
+        new_points -= bet
+    user_col.update_one({"_id": user_id}, {"$set": {"points": new_points}})
     return {
         "success": True,
         "win": win,
@@ -387,12 +407,11 @@ async def api_ou(request: Request):
 
 @app.post("/api/hunt")
 async def api_hunt(request: Request):
+    import random
     data = await request.json()
     user_id = str(data["user_id"])
     weapon = data["weapon"]  # "g", "r", "a", "c"
-    user_data = load_json(USER_DATA_PATH)
 
-    # Dữ liệu vũ khí giống trong bot
     weapon_data = {
         "g": {"item": ":gun: Súng săn", "ammo": 1, "reward_range": (0, 50000)},
         "r": {"item": "<:RPG:1325750069189677087> RPG", "ammo": 10, "reward_range": (-2000000, 5000000)},
@@ -400,13 +419,14 @@ async def api_hunt(request: Request):
         "c": {"item": "<:cleaner:1347560866291257385> máy hút bụi", "ammo": 0, "reward_range": (3000000, 10000000)}
     }
 
-    if user_id not in user_data:
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "Bạn chưa có tài khoản!"}
     if weapon not in weapon_data:
         return {"success": False, "msg": "Vũ khí không hợp lệ!"}
 
     now = datetime.datetime.now()
-    last_hunt = user_data[user_id].get('last_hunt')
+    last_hunt = user.get('last_hunt')
     cooldown_time = 5 * 60
     if last_hunt:
         time_elapsed = (now - datetime.datetime.strptime(last_hunt, "%Y-%m-%d %H:%M:%S")).total_seconds()
@@ -415,7 +435,7 @@ async def api_hunt(request: Request):
             return {"success": False, "msg": f"Bạn cần chờ {minutes} phút {seconds} giây trước khi săn tiếp!"}
 
     weapon_info = weapon_data[weapon]
-    user_items = user_data[user_id].get('items', {})
+    user_items = user.get('items', {})
     weapon_count = user_items.get(weapon_info["item"], 0)
     ammo_count = user_items.get(":bullettrain_side: Viên đạn", 0)
 
@@ -426,18 +446,23 @@ async def api_hunt(request: Request):
 
     # Nếu dùng máy hút bụi thì xóa luôn khỏi kho
     if weapon == "c":
-        del user_data[user_id]['items'][weapon_info["item"]]
+        user_items.pop(weapon_info["item"], None)
     # Trừ đạn
-    user_data[user_id]['items'][":bullettrain_side: Viên đạn"] -= weapon_info["ammo"]
-    if user_data[user_id]['items'][":bullettrain_side: Viên đạn"] == 0:
-        del user_data[user_id]['items'][":bullettrain_side: Viên đạn"]
+    user_items[":bullettrain_side: Viên đạn"] -= weapon_info["ammo"]
+    if user_items[":bullettrain_side: Viên đạn"] == 0:
+        del user_items[":bullettrain_side: Viên đạn"]
 
     # Tính phần thưởng
     hunt_reward = random.randint(*weapon_info["reward_range"])
-    user_data[user_id]['points'] += hunt_reward
-    user_data[user_id]['last_hunt'] = now.strftime("%Y-%m-%d %H:%M:%S")
-
-    save_json(USER_DATA_PATH, user_data)
+    new_points = user['points'] + hunt_reward
+    user_col.update_one(
+        {"_id": user_id},
+        {"$set": {
+            "points": new_points,
+            "items": user_items,
+            "last_hunt": now.strftime("%Y-%m-%d %H:%M:%S")
+        }}
+    )
     return {
         "success": True,
         "msg": f"Bạn đã săn thành công và kiếm được {hunt_reward} coin!",
@@ -449,24 +474,28 @@ async def api_hunt(request: Request):
 async def api_study(request: Request):
     data = await request.json()
     user_id = str(data["user_id"])
-    user_data = load_json(USER_DATA_PATH)
     now = datetime.datetime.now()
-    if user_id not in user_data:
+    user = user_col.find_one({"_id": user_id})
+    if not user:
         return {"success": False, "msg": "Bạn chưa có tài khoản!"}
-    last_study = user_data[user_id].get('last_study')
+    last_study = user.get('last_study')
     cooldown_time = 5 * 60  # 5 phút
     if last_study is not None:
         time_elapsed = (now - datetime.datetime.strptime(last_study, "%Y-%m-%d %H:%M:%S")).total_seconds()
         if time_elapsed < cooldown_time:
             minutes, seconds = divmod(int(cooldown_time - time_elapsed), 60)
             return {"success": False, "msg": f"Bạn cần chờ {minutes} phút {seconds} giây trước khi có thể học tiếp!"}
-    user_data[user_id]['smart'] = user_data[user_id].get('smart', 0) + 10
-    user_data[user_id]['last_study'] = now.strftime("%Y-%m-%d %H:%M:%S")
-    save_json(USER_DATA_PATH, user_data)
-    return {"success": True, "msg": "Bạn vừa học xong ra chơi thôi!", "smart": user_data[user_id]['smart']}
+    smart = user.get('smart', 0) + 10
+    user_col.update_one(
+        {"_id": user_id},
+        {"$set": {
+            "smart": smart,
+            "last_study": now.strftime("%Y-%m-%d %H:%M:%S")
+        }}
+    )
+    return {"success": True, "msg": "Bạn vừa học xong ra chơi thôi!", "smart": smart}
 
 load_dotenv()
-
 
 # Các biến sau điền đúng info app Discord của bạn!
 CLIENT_ID = "1362314957714231326"
