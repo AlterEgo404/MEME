@@ -10,41 +10,41 @@ import os
 from dotenv import load_dotenv
 import httpx
 import secrets
+from pymongo import MongoClient
+
+MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://Ego:MEME@meme.j5dfnh0.mongodb.net/?retryWrites=true&w=majority&appName=MEME")
+
+client = MongoClient(MONGO_URL)
+db = client["MEME"]         # Tên database của bạn
+user_col = db["user"]       # Tên collection (giống như table trong SQL)
 
 app = FastAPI()
 USER_DATA_PATH = "user_data.json"
 SHOP_DATA_PATH = "shop_data.json"
 
-def load_json(path):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+def get_user(user_id):
+    return user_col.find_one({"_id": user_id})
 
-def save_json(path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+def save_user(user_id, data):
+    user_col.update_one({"_id": user_id}, {"$set": data}, upsert=True)
 
 def calculate_level_and_progress(smart):
-    # Ví dụ logic: mỗi lv lên cần 50 + lv*level_step smart
     level, need = 1, 50
     while smart >= need:
         smart -= need
         level += 1
-        need = 50 + level * 45  # tuỳ chỉnh theo ý bạn
+        need = 50 + level * 45
     progress = smart / need if need > 0 else 1
     next_lv = smart + (need - smart)
     return level, progress, need
 
 def get_role_name(level):
-    # Ví dụ: tùy logic bạn
     if level < 3: return "Mẫu giáo"
     elif level < 6: return "Tiểu học (lớp 1)"
     elif level < 10: return "Trung học"
     elif level < 20: return "Cao đẳng"
     return "Tiến sĩ"
-
+    
 @app.get("/api/shop")
 async def api_shop():
     shop_data = load_json(SHOP_DATA_PATH)
