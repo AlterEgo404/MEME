@@ -21,6 +21,10 @@ misc_col = db["misc"]       # Nếu chưa có sẽ tự tạo
 
 app = FastAPI()
 
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 with open("shop_data.json", "r", encoding="utf-8") as f:
     shop_data = json.load(f)
 
@@ -49,10 +53,10 @@ def get_role_name(level):
     elif level < 10: return "Trung học"
     elif level < 20: return "Cao đẳng"
     return "Tiến sĩ"
-    
+
 @app.get("/api/shop")
 async def api_shop():
-    shop_data = load_json(SHOP_DATA_PATH)
+    shop_data = load_json("shop_data.json")
     return {"success": True, "shop": shop_data}
 
 @app.get("/api/user/{user_id}")
