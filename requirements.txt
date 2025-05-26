@@ -6,3 +6,4 @@ python-dotenv
 httpx
 pymongo[srv] >= 3.12
 dnspython >= 2.0.0
+bcrypt
