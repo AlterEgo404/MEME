@@ -546,6 +546,20 @@ async def discord_callback(request: Request):
         discord_id = user["id"]
         username = user["username"]
         avatar = f'https://cdn.discordapp.com/avatars/{discord_id}/{user["avatar"]}.png'
+
+        # ==== Thêm đoạn kiểm tra và tạo mới user nếu cần ====
+        user_exist = user_col.find_one({"_id": discord_id})
+        if not user_exist:
+            user_doc = {
+                "_id": discord_id,
+                "points": 10000,
+                "items": {},
+                "smart": 100
+            }
+            user_col.insert_one(user_doc)
+
+        # ==== Kết thúc thêm ====
+
         # Token hóa session: bạn có thể sinh JWT/Set Cookie... ở đây demo trả về user info luôn
         content = f"""
         <h1>Đăng nhập thành công!</h1>
