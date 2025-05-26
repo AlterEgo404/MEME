@@ -4,5 +4,5 @@ pillow
 requests
 python-dotenv
 httpx
-pymongo
-dnspython
+pymongo[srv] >= 3.12
+dnspython >= 2.0.0
