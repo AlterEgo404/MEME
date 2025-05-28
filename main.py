@@ -27,8 +27,6 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
 SMTP_USER = os.environ.get("SMTP_USER")
 SMTP_PASS = os.environ.get("SMTP_PASS")
 SECRET_KEY = os.environ.get("SECRET_KEY", "random_secret")
-domain = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "yourapp.onrender.com")
-verify_url = f"https://{domain}/verify_email?token={token}"
 
 client = MongoClient(MONGO_URL)
 db = client["MEME"]         # Tên database của bạn
