@@ -20,7 +20,9 @@ load_dotenv()
 # Các biến sau điền đúng info app Discord của bạn!
 CLIENT_ID = "1362314957714231326"
 CLIENT_SECRET = "C3WiceqvHAFQ3FQ7-mH6oFZbt2pYSVxC"
-REDIRECT_URI = "https://meme-xaph.onrender.com/auth/discord/callback"  # hoặc domain thật nếu deploy
+DOMAIN = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "meme-xaph.onrender.com")
+REDIRECT_URI = f"https://{DOMAIN}/auth/discord/callback"
+REDIRECT_URI_LINK = f"https://{DOMAIN}/auth/discord/link/callback"
 MONGO_URL = os.environ.get("MONGO_URL")
 SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
@@ -29,15 +31,13 @@ SMTP_PASS = os.environ.get("SMTP_PASS")
 SECRET_KEY = os.environ.get("SECRET_KEY", "random_secret")
 
 client = MongoClient(MONGO_URL)
-db = client["MEME"]         # Tên database của bạn
-user_col = db["user"]       # Tên collection (giống như table trong SQL)
-misc_col = db["misc"]       # Nếu chưa có sẽ tự tạo
+db = client["MEME"]
+user_col = db["user"]
+misc_col = db["misc"]
 
 app = FastAPI()
 
-# Mount static folder
 app.mount("/static", StaticFiles(directory="static"), name="static")
-# Cấu hình templates folder
 templates = Jinja2Templates(directory="templates")
 
 def load_json(path):
@@ -46,15 +46,6 @@ def load_json(path):
 
 with open("shop_data.json", "r", encoding="utf-8") as f:
     shop_data = json.load(f)
-
-def get_user(user_id):
-    return user_col.find_one({"_id": user_id})
-
-def save_user(user_id, data):
-    user_col.update_one({"_id": user_id}, {"$set": data}, upsert=True)
-
-def set_jackpot(amount):
-    misc_col.update_one({"_id": "jackpot"}, {"$set": {"value": amount}}, upsert=True)
 
 def calculate_level_and_progress(smart):
     level, need = 1, 50
@@ -74,30 +65,16 @@ def get_role_name(level):
     return "Tiến sĩ"
 
 def send_verification_email(email, token):
-    domain = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "your-app.onrender.com")
-    verify_url = f"https://{domain}/verify_email?token={token}"
+    verify_url = f"https://{DOMAIN}/verify_email?token={token}"
     body = f"Chào bạn,\n\nNhấp vào link sau để xác thực tài khoản Meme App:\n{verify_url}\n\nNếu không phải bạn đăng ký, hãy bỏ qua email này."
     msg = MIMEText(body, "plain", "utf-8")
     msg['Subject'] = "Xác thực email Meme App"
     msg['From'] = SMTP_USER
     msg['To'] = email
-
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASS)
         server.sendmail(SMTP_USER, [email], msg.as_string())
-
-# Route đăng nhập
-@app.get("/link/discord")
-def link_discord(user_id: str):
-    # user_id là _id/email của user hiện tại
-    state = user_id  # Để truyền thông tin ai đang liên kết
-    discord_oauth_url = (
-        f"https://discord.com/oauth2/authorize?client_id={CLIENT_ID}"
-        f"&redirect_uri={REDIRECT_URI_LINK}&response_type=code&scope=identify"
-        f"&state={state}"
-    )
-    return RedirectResponse(discord_oauth_url)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -111,15 +88,24 @@ def login_discord():
     )
     return RedirectResponse(discord_oauth_url)
 
-# Route callback
+@app.get("/link/discord")
+def link_discord(user_id: str):
+    # user_id là _id/email của user hiện tại
+    state = user_id
+    discord_oauth_url = (
+        f"https://discord.com/oauth2/authorize?client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI_LINK}&response_type=code&scope=identify"
+        f"&state={state}"
+    )
+    return RedirectResponse(discord_oauth_url)
+
 @app.get("/auth/discord/link/callback")
 async def discord_link_callback(request: Request):
     code = request.query_params.get("code")
-    state = request.query_params.get("state")   # chính là user_id/email truyền lên lúc đầu
+    state = request.query_params.get("state")
     if not code or not state:
         return HTMLResponse("Lỗi xác thực Discord.", status_code=400)
 
-    # Lấy access token như bình thường
     token_url = "https://discord.com/api/oauth2/token"
     data = {
         "client_id": CLIENT_ID,
@@ -131,14 +117,14 @@ async def discord_link_callback(request: Request):
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    async with httpx.AsyncClient() as client:
-        token_response = await client.post(token_url, data=data, headers=headers)
+    async with httpx.AsyncClient() as client_http:
+        token_response = await client_http.post(token_url, data=data, headers=headers)
         if token_response.status_code != 200:
             return HTMLResponse("Không lấy được token Discord.", status_code=400)
         tokens = token_response.json()
         access_token = tokens.get("access_token")
 
-        user_response = await client.get(
+        user_response = await client_http.get(
             "https://discord.com/api/users/@me",
             headers={"Authorization": f"Bearer {access_token}"}
         )
@@ -147,12 +133,10 @@ async def discord_link_callback(request: Request):
         username = discord_user["username"]
         avatar = f'https://cdn.discordapp.com/avatars/{discord_id}/{discord_user.get("avatar")}.png'
 
-        # Kiểm tra xem discord_id đã liên kết với user nào khác chưa
         conflict_user = user_col.find_one({"discord_id": discord_id})
         if conflict_user and conflict_user["_id"] != state:
             return HTMLResponse("Discord này đã được liên kết với tài khoản khác!", status_code=409)
 
-        # Liên kết: thêm discord_id vào user hiện tại (state là user_id/email)
         user_col.update_one(
             {"_id": state},
             {"$set": {
@@ -161,7 +145,6 @@ async def discord_link_callback(request: Request):
                 "discord_avatar": avatar
             }}
         )
-
         return HTMLResponse("<h2>Liên kết Discord thành công! Bạn đã có thể dùng Discord để đăng nhập tài khoản này.</h2><a href='/'>Về trang chủ</a>")
 
 @app.get("/auth/discord/callback")
@@ -170,7 +153,6 @@ async def discord_callback(request: Request):
     if not code:
         return HTMLResponse("Lỗi xác thực Discord.", status_code=400)
 
-    # Lấy access token từ Discord
     token_url = "https://discord.com/api/oauth2/token"
     data = {
         "client_id": CLIENT_ID,
@@ -182,15 +164,14 @@ async def discord_callback(request: Request):
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    async with httpx.AsyncClient() as client:
-        token_response = await client.post(token_url, data=data, headers=headers)
+    async with httpx.AsyncClient() as client_http:
+        token_response = await client_http.post(token_url, data=data, headers=headers)
         if token_response.status_code != 200:
             return HTMLResponse("Không lấy được token Discord.", status_code=400)
         tokens = token_response.json()
         access_token = tokens.get("access_token")
 
-        # Lấy user info từ Discord API
-        user_response = await client.get(
+        user_response = await client_http.get(
             "https://discord.com/api/users/@me",
             headers={"Authorization": f"Bearer {access_token}"}
         )
@@ -201,17 +182,11 @@ async def discord_callback(request: Request):
         if avatar_hash:
             avatar = f'https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png'
         else:
-            avatar = "https://cdn.discordapp.com/embed/avatars//static/0.png"  # default avatar
+            avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
 
-        # ==== Liên kết hoặc tạo user ====
-        # 1. Ưu tiên tìm user đã liên kết discord_id
         user_exist = user_col.find_one({"discord_id": discord_id})
-
-        # 2. Nếu chưa có user liên kết, thử tìm user tạo bằng Discord (_id = discord_id)
         if not user_exist:
             user_exist = user_col.find_one({"_id": discord_id})
-
-        # 3. Nếu vẫn không thấy, tạo user mới (Discord user)
         if not user_exist:
             user_doc = {
                 "_id": discord_id,
@@ -224,7 +199,6 @@ async def discord_callback(request: Request):
             }
             user_col.insert_one(user_doc)
         else:
-            # Cập nhật username/avatar Discord (nếu muốn)
             user_col.update_one(
                 {"_id": user_exist["_id"]},
                 {"$set": {
@@ -232,11 +206,8 @@ async def discord_callback(request: Request):
                     "discord_avatar": avatar
                 }}
             )
-
-        # Xác định user_id thực sự (có thể là email hoặc discord_id)
         user_id = user_exist["_id"] if user_exist else discord_id
 
-        # ==== Token hóa session hoặc trả về info ====
         content = f"""
         <h1>Đăng nhập thành công!</h1>
         <img src="{avatar}" width=80><br>
@@ -246,7 +217,7 @@ async def discord_callback(request: Request):
           localStorage.setItem('uid', '{user_id}');
           localStorage.setItem('avatar', '{avatar}');
           localStorage.setItem('username', '{username}');
-          window.location = '/';  // chuyển về trang chính hoặc dashboard
+          window.location = '/';
         </script>
         """
         return HTMLResponse(content)
@@ -258,7 +229,6 @@ async def api_register(request: Request):
     email = data.get("email", "").strip().lower()
     password = data.get("password", "")
 
-    # Kiểm tra user hoặc email đã tồn tại
     if user_col.find_one({"_id": user_id}):
         return JSONResponse({"success": False, "msg": "User ID đã tồn tại"}, status_code=400)
     if user_col.find_one({"email": email}):
@@ -302,39 +272,13 @@ async def api_login(request: Request):
     data = await request.json()
     user_id = data.get("user_id", "").strip()
     password = data.get("password", "")
-    user = user_col.find_one({"_id": user_id})
+    # Cho phép login bằng user_id hoặc email
+    user = user_col.find_one({"_id": user_id}) or user_col.find_one({"email": user_id})
     if not user or not bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
         return {"success": False, "msg": "Sai thông tin đăng nhập!"}
     if not user.get("is_verified", False):
         return {"success": False, "msg": "Tài khoản chưa xác thực email. Vui lòng kiểm tra email."}
-    # Xử lý login thành công (JWT/cookie hoặc trả thông tin)
     return {"success": True, "msg": "Đăng nhập thành công!"}
-
-@app.post("/api/start")
-async def api_start(request: Request):
-    data = await request.json()
-    user_id = str(data["user_id"])
-    
-    # Kiểm tra tài khoản đã tồn tại chưa
-    existing = user_col.find_one({"_id": user_id})
-    if existing:
-        return {"success": False, "msg": "Tài khoản đã tồn tại."}
-
-    # Khởi tạo tài khoản mới
-    user_doc = {
-        "_id": user_id,
-        "points": 10000,
-        "items": {},
-        "smart": 100
-    }
-    user_col.insert_one(user_doc)
-
-    return {"success": True, "msg": "Tạo tài khoản thành công!"}
-
-@app.get("/api/shop")
-async def api_shop():
-    shop_data = load_json("shop_data.json")
-    return {"success": True, "shop": shop_data}
 
 @app.get("/api/user/{user_id}")
 async def api_get_user(user_id: str):
@@ -345,7 +289,8 @@ async def api_get_user(user_id: str):
         "success": True,
         "points": user.get("points", 0),
         "items": user.get("items", {}),
-        "smart": user.get("smart", 0)
+        "smart": user.get("smart", 0),
+        "discord_id": user.get("discord_id")
     }
 
 @app.get("/api/leaderboard/{kind}")

@@ -215,6 +215,9 @@ input[type="number"], select {
   margin-top: 0;
   font-size: 1.1rem;
 }
+#tabs button { margin: 0 3px; }
+#tabs button.active { background: #ccc; color: #222; }
+.tab-content { margin-top: 12px; }
 @media (max-width: 600px) {
   #login-box, #functions, #discordinfo, #userinfo {
     max-width: 98vw;
