@@ -30,339 +30,376 @@
     </div>
     <p id="msg"></p>
   </div>
-
   <!-- MAIN CONTENT, chỉ hiện khi đăng nhập -->
-  <div id="main-content" style="display:none;">
-    <div id="functions">
-      <button onclick="daily()">Nhận quà Daily</button>
-      <button onclick="getShop()">Xem Shop</button>
-      <button onclick="showJar()">Xem hũ Jackpot</button>
-      <button onclick="showCCCD()">Xem ảnh CCCD</button>
-      <button onclick="showLeaderboard()">Xem bảng xếp hạng</button>
-      <button onclick="study()">Học tăng trình độ</button>
-      <button onclick="showTaixiu()">Tài xỉu</button>
-      <button onclick="showHunt()">Đi săn</button>
-      <button onclick="logout()">Đăng xuất</button>
-      <button onclick="linkDiscord()" id="link-discord-btn" style="display:none;">Liên kết Discord</button>
-    </div>
-    <div id="userinfo"></div>
-    <div id="content-box"></div>
-  </div>
-
   <script>
-    // Hiển thị tab login/register/discord
-    function showTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-      document.getElementById(tabId).style.display = '';
-    }
-
-    // Auto đăng nhập nếu đã lưu
-    window.onload = function() {
-      let uid = localStorage.getItem('uid');
-      if(uid) {
-        setUser(uid);
-        document.getElementById("login-box").style.display = "none";
-        document.getElementById("main-content").style.display = "";
-      } else {
-        document.getElementById("login-box").style.display = "";
-        document.getElementById("main-content").style.display = "none";
-      }
-    }
-
-    // Đăng nhập bằng email/user
-    function loginEmail() {
-      var user = document.getElementById("login_user").value;
-      var pass = document.getElementById("login_pass").value;
-      if (!user || !pass) return alert("Điền đủ thông tin!");
-      fetch('/api/login', {
-        method: 'POST',
-        body: JSON.stringify({user_id: user, password: pass}),
-        headers: {'Content-Type': 'application/json'}
-      }).then(r => r.json()).then(data => {
-        document.getElementById("msg").innerText = data.msg;
-        if (data.success) {
-          setUser(user);
-        }
-      });
-    }
-
-    // Đăng ký tài khoản email
-    function registerEmail() {
-      var user = document.getElementById("reg_user").value;
-      var email = document.getElementById("reg_email").value;
-      var pass = document.getElementById("reg_pass").value;
-      if (!user || !email || !pass) return alert("Điền đủ thông tin!");
-      fetch('/api/register', {
-        method: 'POST',
-        body: JSON.stringify({user_id: user, email: email, password: pass}),
-        headers: {'Content-Type': 'application/json'}
-      }).then(r => r.json()).then(data => {
-        document.getElementById("msg").innerText = data.msg;
-      });
-    }
-
-    // Thiết lập user sau khi login thành công
-    function setUser(uid) {
-      localStorage.setItem('uid', uid);
-      document.getElementById('login-box').style.display = 'none';
-      document.getElementById('main-content').style.display = '';
-      getUserInfo();
-      fetch('/api/user/' + uid)
-        .then(res => res.json())
-        .then(user => {
-          if (user.success && !user.discord_id) {
-            document.getElementById("link-discord-btn").style.display = '';
-          } else {
-            document.getElementById("link-discord-btn").style.display = 'none';
-          }
+    function switchTab(tab) {
+        document.querySelectorAll('.ribbon-tab').forEach((t, i) => {
+            t.classList.toggle('active', (tab === 'games' && i === 0) || (tab === 'chat' && i === 1));
         });
+        document.getElementById('games-tab').style.display = tab === 'games' ? '' : 'none';
+        document.getElementById('chat-tab').style.display = tab === 'chat' ? '' : 'none';
     }
 
-    // Đăng xuất
-    function logout() {
-      localStorage.clear();
-      document.getElementById('login-box').style.display = '';
-      document.getElementById('main-content').style.display = 'none';
-      document.getElementById('userinfo').innerHTML = '';
-      document.getElementById('shopinfo').innerHTML = '';
-    }
-
-    // Liên kết Discord
-    function linkDiscord() {
-      let uid = localStorage.getItem('uid');
-      window.location = '/link/discord?user_id=' + encodeURIComponent(uid);
-    }
-
-    // Lấy uid hiện tại
-    function getUID() {
-      return localStorage.getItem('uid');
-    }
-
-    // Hiện thông tin user
-    function getUserInfo() {
-      let uid = getUID();
-      let avatar = localStorage.getItem('avatar');
-      let username = localStorage.getItem('username');
-      if (!uid) return;
-      fetch('/api/user/' + uid)
-      .then(res => res.json())
-      .then(user => {
-        if(user.success){
-          let html = "";
-          if (avatar && username) {
-            html += `<img src="${avatar}" width="50" style="border-radius:50%;vertical-align:middle"> <b>${username}</b> (Discord ID: ${uid})<br>`;
-          }
-          html += "<b>Thông tin tài khoản:</b><br>";
-          html += "Điểm: " + user.points + "<br>";
-          html += "Smart: " + user.smart + "<br>";
-          html += "Items: ";
-          if (Object.keys(user.items).length > 0) {
-            html += "<ul>";
-            for(let key in user.items) {
-              html += "<li>" + key + ": " + user.items[key] + "</li>";
-            }
-            html += "</ul>";
-          } else {
-            html += " (Trống)";
-          }
-          document.getElementById("userinfo").innerHTML = html;
-        }
-      });
-    }
-
-    // ========== CÁC HÀM CHỨC NĂNG ==========
-
-    function daily() {
-      let uid = getUID();
-      fetch('/api/daily', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: uid }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById("content-box").innerHTML = `<div>${data.msg}</div>`;
-          if (data.success) getUserInfo();
-        });
-    }
-
-    function getShop() {
-      let uid = getUID();
-      fetch('/api/user/' + uid)
-        .then(res => res.json())
-        .then(user => {
-          if (!user.success) return;
-          let userItems = user.items || {};
-          fetch('/api/shop')
-            .then(res => res.json())
-            .then(data => {
-              let html = "<ul>";
-              for (let id in data.shop) {
-                let sp = data.shop[id];
-                let own = userItems[sp.name] || 0;
-                html += `<li>
-                  ${sp.name} - Giá: ${sp.price} 
-                  <button onclick="buyItem('${id}')">Mua</button>
-                  ${own > 0 ? `
-                    <button onclick="sellItemPrompt('${id}', '${sp.name}', ${own})">Bán</button>
-                    (Bạn có: ${own})
-                  ` : ""}
-                </li>`;
-              }
-              html += "</ul>";
-              document.getElementById("content-box").innerHTML = html;
-            });
-        });
-    }
-
-    function buyItem(id) {
-      let uid = getUID();
-      let sl = prompt("Nhập số lượng muốn mua:", 1);
-      if (!sl || isNaN(sl) || Number(sl) < 1) return;
-      fetch('/api/buy', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: uid, item_id: id, quantity: Number(sl) }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.msg);
-        getUserInfo();
-        getShop();
-      });
-    }
-
-    function sellItemPrompt(item_id, item_name, maxQty) {
-      let uid = getUID();
-      let sl = prompt(`Nhập số lượng muốn bán (Bạn có: ${maxQty}):`, 1);
-      if (!sl || isNaN(sl) || Number(sl) < 1) return;
-      if (Number(sl) > maxQty) return alert("Bạn không có đủ vật phẩm để bán!");
-      fetch('/api/sell', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: uid, item_id: item_id, quantity: Number(sl) }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.msg);
-        getUserInfo();
-        getShop();
-      });
-    }
-
-    function showJar() {
-      fetch('/api/jar')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            document.getElementById("content-box").innerHTML =
-              `<p style="font-size:20px; color:#c88c0c;">💰 Jackpot hiện tại: <b>${data.jackpot_fmt} coin</b></p>`;
-          }
-        });
-    }
-
-    function showCCCD() {
-      let uid = getUID();
-      let avatar = localStorage.getItem('avatar');
-      let username = localStorage.getItem('username');
-      let url = '/api/cccd/' + uid +
-        '?avatar=' + encodeURIComponent(avatar) +
-        '&username=' + encodeURIComponent(username) +
-        '&rand=' + Math.random();
-      document.getElementById("content-box").innerHTML =
-        `<img id="cccdimg" width="400" style="margin:22px auto 10px auto; display:block;" src="${url}">`;
-    }
-
-    function showLeaderboard() {
-      fetch('/api/leaderboard/a')
-        .then(res => res.json())
-        .then(data => {
-          let html = "<ul>";
-          for (let u of data.leaderboard) {
-            html += `<li>User: ${u.user_id} – Điểm: ${u.value}</li>`;
-          }
-          html += "</ul>";
-          document.getElementById("content-box").innerHTML = html;
-        });
-    }
-
-    function study() {
-      let uid = getUID();
-      fetch('/api/study', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: uid }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.msg);
-        getUserInfo();
-      });
-    }
-
-    function showTaixiu() {
-      document.getElementById("content-box").innerHTML = `
-        <div id="taixiu-box">
-          <input type="number" id="ou_bet" placeholder="Số tiền cược" style="margin-bottom: 12px; width: 160px;"><br>
-          <button onclick="playOu('t')">Tài</button>
-          <button onclick="playOu('x')">Xỉu</button>
-          <div id="ouresult" style="margin-top:14px;"></div>
-        </div>
-      `;
-    }
-    function playOu(choice) {
-      let uid = getUID();
-      let bet = document.getElementById("ou_bet").value;
-      if (!bet) return alert("Bạn cần nhập số tiền cược!");
-      fetch('/api/ou', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: uid, bet: bet, choice: choice }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => res.json())
-      .then(data => {
-        let resBox = document.getElementById("ouresult");
-        if (!data.success) {
-          resBox.innerText = data.msg;
-        } else {
-          resBox.innerHTML = `<b>${data.win ? "🎉 Thắng!" : "💀 Thua!"}</b><br>
-            Kết quả: ${data.dice[0]}, ${data.dice[1]}, ${data.dice[2]} (Tổng: ${data.total})<br>
-            ${data.msg}`;
-          getUserInfo();
-        }
-      });
-    }
-
-    function showHunt() {
-      document.getElementById("content-box").innerHTML = `
-        <div id="hunt-box">
-          <h3>Đi săn</h3>
-          <select id="hunt_weapon">
-            <option value="g">Súng săn</option>
-            <option value="a">Awm</option>
-            <option value="r">RPG</option>
-            <option value="c">Máy hút bụi</option>
-          </select>
-          <button onclick="hunt()">Săn</button>
-          <div id="huntresult" style="margin-top:10px;"></div>
-        </div>
-      `;
-    }
-    function hunt() {
-      let uid = getUID();
-      let weapon = document.getElementById("hunt_weapon").value;
-      fetch('/api/hunt', {
-        method: 'POST',
-        body: JSON.stringify({ user_id: uid, weapon: weapon }),
-        headers: { 'Content-Type': 'application/json' }
-      })
-      .then(res => res.json())
-      .then(data => {
-        let box = document.getElementById("huntresult");
-        box.innerText = data.msg;
-        getUserInfo();
-      });
+    // Chat đơn giản (client-only, chưa lưu DB)
+    function sendChat() {
+        let chatWindow = document.getElementById('chat-window');
+        let input = document.getElementById('chat-input');
+        let text = input.value.trim();
+        if (!text) return;
+        let div = document.createElement('div');
+        div.style.margin = '5px 0';
+        div.innerHTML = '<b>Bạn:</b> ' + text;
+        chatWindow.appendChild(div);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        input.value = '';
+        // Nếu muốn gửi lên backend, bạn thêm fetch('/api/chat', { ... })
     }
   </script>
+  <div class="ribbon-menu">
+      <span class="ribbon-tab active" onclick="switchTab('games')">Trò chơi</span>
+      <span class="ribbon-tab" onclick="switchTab('chat')">Trò chuyện</span>
+  </div>
+  <div id="games-tab" class="tab-content">
+    <div id="main-content" style="display:none;">
+      <div id="functions">
+        <button onclick="daily()">Nhận quà Daily</button>
+        <button onclick="getShop()">Xem Shop</button>
+        <button onclick="showJar()">Xem hũ Jackpot</button>
+        <button onclick="showCCCD()">Xem ảnh CCCD</button>
+        <button onclick="showLeaderboard()">Xem bảng xếp hạng</button>
+        <button onclick="study()">Học tăng trình độ</button>
+        <button onclick="showTaixiu()">Tài xỉu</button>
+        <button onclick="showHunt()">Đi săn</button>
+        <button onclick="logout()">Đăng xuất</button>
+        <button onclick="linkDiscord()" id="link-discord-btn" style="display:none;">Liên kết Discord</button>
+      </div>
+      <div id="userinfo"></div>
+      <div id="content-box"></div>
+    </div>
+    <script>
+      // Hiển thị tab login/register/discord
+      function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        document.getElementById(tabId).style.display = '';
+      }
+
+      // Auto đăng nhập nếu đã lưu
+      window.onload = function() {
+        let uid = localStorage.getItem('uid');
+        if(uid) {
+          setUser(uid);
+          document.getElementById("login-box").style.display = "none";
+          document.getElementById("main-content").style.display = "";
+        } else {
+          document.getElementById("login-box").style.display = "";
+          document.getElementById("main-content").style.display = "none";
+        }
+      }
+
+      // Đăng nhập bằng email/user
+      function loginEmail() {
+        var user = document.getElementById("login_user").value;
+        var pass = document.getElementById("login_pass").value;
+        if (!user || !pass) return alert("Điền đủ thông tin!");
+        fetch('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({user_id: user, password: pass}),
+          headers: {'Content-Type': 'application/json'}
+        }).then(r => r.json()).then(data => {
+          document.getElementById("msg").innerText = data.msg;
+          if (data.success) {
+            setUser(user);
+          }
+        });
+      }
+
+      // Đăng ký tài khoản email
+      function registerEmail() {
+        var user = document.getElementById("reg_user").value;
+        var email = document.getElementById("reg_email").value;
+        var pass = document.getElementById("reg_pass").value;
+        if (!user || !email || !pass) return alert("Điền đủ thông tin!");
+        fetch('/api/register', {
+          method: 'POST',
+          body: JSON.stringify({user_id: user, email: email, password: pass}),
+          headers: {'Content-Type': 'application/json'}
+        }).then(r => r.json()).then(data => {
+          document.getElementById("msg").innerText = data.msg;
+        });
+      }
+
+      // Thiết lập user sau khi login thành công
+      function setUser(uid) {
+        localStorage.setItem('uid', uid);
+        document.getElementById('login-box').style.display = 'none';
+        document.getElementById('main-content').style.display = '';
+        getUserInfo();
+        fetch('/api/user/' + uid)
+          .then(res => res.json())
+          .then(user => {
+            if (user.success && !user.discord_id) {
+              document.getElementById("link-discord-btn").style.display = '';
+            } else {
+              document.getElementById("link-discord-btn").style.display = 'none';
+            }
+          });
+      }
+
+      // Đăng xuất
+      function logout() {
+        localStorage.clear();
+        document.getElementById('login-box').style.display = '';
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('userinfo').innerHTML = '';
+        document.getElementById('shopinfo').innerHTML = '';
+      }
+
+      // Liên kết Discord
+      function linkDiscord() {
+        let uid = localStorage.getItem('uid');
+        window.location = '/link/discord?user_id=' + encodeURIComponent(uid);
+      }
+
+      // Lấy uid hiện tại
+      function getUID() {
+        return localStorage.getItem('uid');
+      }
+
+      // Hiện thông tin user
+      function getUserInfo() {
+        let uid = getUID();
+        let avatar = localStorage.getItem('avatar');
+        let username = localStorage.getItem('username');
+        if (!uid) return;
+        fetch('/api/user/' + uid)
+        .then(res => res.json())
+        .then(user => {
+          if(user.success){
+            let html = "";
+            if (avatar && username) {
+              html += `<img src="${avatar}" width="50" style="border-radius:50%;vertical-align:middle"> <b>${username}</b> (Discord ID: ${uid})<br>`;
+            }
+            html += "<b>Thông tin tài khoản:</b><br>";
+            html += "Điểm: " + user.points + "<br>";
+            html += "Smart: " + user.smart + "<br>";
+            html += "Items: ";
+            if (Object.keys(user.items).length > 0) {
+              html += "<ul>";
+              for(let key in user.items) {
+                html += "<li>" + key + ": " + user.items[key] + "</li>";
+              }
+              html += "</ul>";
+            } else {
+              html += " (Trống)";
+            }
+            document.getElementById("userinfo").innerHTML = html;
+          }
+        });
+      }
+
+      // ========== CÁC HÀM CHỨC NĂNG ==========
+
+      function daily() {
+        let uid = getUID();
+        fetch('/api/daily', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: uid }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("content-box").innerHTML = `<div>${data.msg}</div>`;
+            if (data.success) getUserInfo();
+          });
+      }
+
+      function getShop() {
+        let uid = getUID();
+        fetch('/api/user/' + uid)
+          .then(res => res.json())
+          .then(user => {
+            if (!user.success) return;
+            let userItems = user.items || {};
+            fetch('/api/shop')
+              .then(res => res.json())
+              .then(data => {
+                let html = "<ul>";
+                for (let id in data.shop) {
+                  let sp = data.shop[id];
+                  let own = userItems[sp.name] || 0;
+                  html += `<li>
+                    ${sp.name} - Giá: ${sp.price} 
+                    <button onclick="buyItem('${id}')">Mua</button>
+                    ${own > 0 ? `
+                      <button onclick="sellItemPrompt('${id}', '${sp.name}', ${own})">Bán</button>
+                      (Bạn có: ${own})
+                    ` : ""}
+                  </li>`;
+                }
+                html += "</ul>";
+                document.getElementById("content-box").innerHTML = html;
+              });
+          });
+      }
+
+      function buyItem(id) {
+        let uid = getUID();
+        let sl = prompt("Nhập số lượng muốn mua:", 1);
+        if (!sl || isNaN(sl) || Number(sl) < 1) return;
+        fetch('/api/buy', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: uid, item_id: id, quantity: Number(sl) }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.msg);
+          getUserInfo();
+          getShop();
+        });
+      }
+
+      function sellItemPrompt(item_id, item_name, maxQty) {
+        let uid = getUID();
+        let sl = prompt(`Nhập số lượng muốn bán (Bạn có: ${maxQty}):`, 1);
+        if (!sl || isNaN(sl) || Number(sl) < 1) return;
+        if (Number(sl) > maxQty) return alert("Bạn không có đủ vật phẩm để bán!");
+        fetch('/api/sell', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: uid, item_id: item_id, quantity: Number(sl) }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.msg);
+          getUserInfo();
+          getShop();
+        });
+      }
+
+      function showJar() {
+        fetch('/api/jar')
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              document.getElementById("content-box").innerHTML =
+                `<p style="font-size:20px; color:#c88c0c;">💰 Jackpot hiện tại: <b>${data.jackpot_fmt} coin</b></p>`;
+            }
+          });
+      }
+
+      function showCCCD() {
+        let uid = getUID();
+        let avatar = localStorage.getItem('avatar');
+        let username = localStorage.getItem('username');
+        let url = '/api/cccd/' + uid +
+          '?avatar=' + encodeURIComponent(avatar) +
+          '&username=' + encodeURIComponent(username) +
+          '&rand=' + Math.random();
+        document.getElementById("content-box").innerHTML =
+          `<img id="cccdimg" width="400" style="margin:22px auto 10px auto; display:block;" src="${url}">`;
+      }
+
+      function showLeaderboard() {
+        fetch('/api/leaderboard/a')
+          .then(res => res.json())
+          .then(data => {
+            let html = "<ul>";
+            for (let u of data.leaderboard) {
+              html += `<li>User: ${u.user_id} – Điểm: ${u.value}</li>`;
+            }
+            html += "</ul>";
+            document.getElementById("content-box").innerHTML = html;
+          });
+      }
+
+      function study() {
+        let uid = getUID();
+        fetch('/api/study', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: uid }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.msg);
+          getUserInfo();
+        });
+      }
+
+      function showTaixiu() {
+        document.getElementById("content-box").innerHTML = `
+          <div id="taixiu-box">
+            <input type="number" id="ou_bet" placeholder="Số tiền cược" style="margin-bottom: 12px; width: 160px;"><br>
+            <button onclick="playOu('t')">Tài</button>
+            <button onclick="playOu('x')">Xỉu</button>
+            <div id="ouresult" style="margin-top:14px;"></div>
+          </div>
+        `;
+      }
+      function playOu(choice) {
+        let uid = getUID();
+        let bet = document.getElementById("ou_bet").value;
+        if (!bet) return alert("Bạn cần nhập số tiền cược!");
+        fetch('/api/ou', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: uid, bet: bet, choice: choice }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          let resBox = document.getElementById("ouresult");
+          if (!data.success) {
+            resBox.innerText = data.msg;
+          } else {
+            resBox.innerHTML = `<b>${data.win ? "🎉 Thắng!" : "💀 Thua!"}</b><br>
+              Kết quả: ${data.dice[0]}, ${data.dice[1]}, ${data.dice[2]} (Tổng: ${data.total})<br>
+              ${data.msg}`;
+            getUserInfo();
+          }
+        });
+      }
+
+      function showHunt() {
+        document.getElementById("content-box").innerHTML = `
+          <div id="hunt-box">
+            <h3>Đi săn</h3>
+            <select id="hunt_weapon">
+              <option value="g">Súng săn</option>
+              <option value="a">Awm</option>
+              <option value="r">RPG</option>
+              <option value="c">Máy hút bụi</option>
+            </select>
+            <button onclick="hunt()">Săn</button>
+            <div id="huntresult" style="margin-top:10px;"></div>
+          </div>
+        `;
+      }
+      function hunt() {
+        let uid = getUID();
+        let weapon = document.getElementById("hunt_weapon").value;
+        fetch('/api/hunt', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: uid, weapon: weapon }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          let box = document.getElementById("huntresult");
+          box.innerText = data.msg;
+          getUserInfo();
+        });
+      }
+    </script>
+  </div>
+  <div id="chat-tab" class="tab-content" style="display:none;">
+      <div id="chat-window" style="height:240px;overflow-y:auto;background:#f8fafc;padding:12px;border-radius:6px;margin-bottom:10px;">
+        <!-- Tin nhắn sẽ hiện ở đây -->
+      </div>
+      <div style="display:flex;">
+        <input id="chat-input" type="text" placeholder="Nhập tin nhắn..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd9ea;">
+        <button onclick="sendChat()" style="margin-left:8px;">Gửi</button>
+      </div>
+  </div>
 </body>
 </html>

@@ -218,6 +218,43 @@ input[type="number"], select {
 #tabs button { margin: 0 3px; }
 #tabs button.active { background: #ccc; color: #222; }
 .tab-content { margin-top: 12px; }
+.ribbon-menu {
+    background: #268048;
+    padding: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    font-family: Segoe UI, Arial, sans-serif;
+    margin-bottom: 10px;
+}
+.ribbon-tab {
+    color: #fff;
+    padding: 0 28px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 17px;
+    transition: background 0.12s;
+}
+.ribbon-tab.active {
+    background: #fff;
+    color: #268048;
+    border-radius: 3px 3px 0 0;
+    font-weight: bold;
+}
+.ribbon-tab:not(.active):hover {
+    background: #2f9760;
+}
+.tab-content {
+    padding: 22px 32px;
+    background: #fff;
+    min-height: 160px;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 2px 8px #2f976012;
+    font-size: 18px;
+    margin-bottom: 16px;
+}
 @media (max-width: 600px) {
   #login-box, #functions, #discordinfo, #userinfo {
     max-width: 98vw;
