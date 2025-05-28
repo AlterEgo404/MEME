@@ -408,7 +408,8 @@ async def api_cccd(
         bg = Image.new("RGBA", (400, 225), (30, 30, 70, 255))
 
     # 1. Ảnh nhỏ góc trái: luôn là /static/1.png
-    avatar_small = Image.open("/static/1.png").resize((64, 64)).convert("RGBA")
+    avatar_small_path = os.path.join(os.path.dirname(__file__), "static", "1.png")
+    avatar_small = Image.open(avatar_small_path).resize((64, 64)).convert("RGBA")
     def circle_crop(img):
         size = img.size
         mask = Image.new('L', size, 0)
@@ -430,7 +431,8 @@ async def api_cccd(
             raise Exception("Không có avatar_url hợp lệ")
     except Exception as e:
         print("Lỗi avatar lớn:", e)
-        avatar_big = Image.open("2.png").resize((128, 128)).convert("RGBA")
+        avatar_big_path = os.path.join(os.path.dirname(__file__), "static", "0.png")
+        avatar_big = Image.open(avatar_big_path).resize((128, 128)).convert("RGBA")
 
     # Chỉnh vị trí tại đây (vd: (10, 65))
     bg.paste(avatar_big, (10, 65))
