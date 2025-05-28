@@ -201,7 +201,7 @@ async def discord_callback(request: Request):
         if avatar_hash:
             avatar = f'https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png'
         else:
-            avatar = "https://cdn.discordapp.com/embed/avatars/0.png"  # default avatar
+            avatar = "https://cdn.discordapp.com/embed/avatars//static/0.png"  # default avatar
 
         # ==== Liên kết hoặc tạo user ====
         # 1. Ưu tiên tìm user đã liên kết discord_id
@@ -407,8 +407,8 @@ async def api_cccd(
     except:
         bg = Image.new("RGBA", (400, 225), (30, 30, 70, 255))
 
-    # 1. Ảnh nhỏ góc trái: luôn là 1.png
-    avatar_small = Image.open("1.png").resize((64, 64)).convert("RGBA")
+    # 1. Ảnh nhỏ góc trái: luôn là /static/1.png
+    avatar_small = Image.open("/static/1.png").resize((64, 64)).convert("RGBA")
     def circle_crop(img):
         size = img.size
         mask = Image.new('L', size, 0)
