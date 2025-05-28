@@ -1,0 +1,224 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: url('2493c60e-fd04-4745-a94c-d03f4db33c0b.png') center/cover no-repeat,
+              linear-gradient(135deg, #4e1d7c 30%, #a56ff9 100%);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  color: #23272f;
+}
+#main-content {
+  margin: 40px auto 0 auto;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18);
+  max-width: 530px;
+  padding: 32px 34px 24px 34px;
+  text-align: center;
+}
+#main-content h3 {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-top: 18px;
+  margin-bottom: 14px;
+  color: #6c36ad;
+}
+#main-content input, #main-content select {
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1px solid #ccd9ea;
+  font-size: 15px;
+  background: #f7f9fe;
+  margin-bottom: 6px;
+  margin-right: 4px;
+}
+#main-content button {
+  background: linear-gradient(90deg, #4f8cff, #39cbe3 80%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 17px;
+  font-size: 15px;
+  margin: 5px 6px 7px 0;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #b6d2ff22;
+  transition: background 0.15s, transform 0.12s;
+}
+#main-content button:hover {
+  background: linear-gradient(90deg, #3489f1, #30adc3 80%);
+  transform: translateY(-2px) scale(1.04);
+}
+#userinfo, #discordinfo {
+  margin: 25px auto 10px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px #2b304040;
+  padding: 16px 28px 16px 28px;
+  width: 98%;
+  max-width: 420px;
+  text-align: left;
+}
+#userinfo img, #discordinfo img {
+  border-radius: 50%;
+  border: 2.5px solid #4f8cff;
+  margin-right: 14px;
+  vertical-align: middle;
+  background: #f8fafc;
+}
+#login-box {
+  margin: 80px auto 0 auto;
+  background: rgba(255,255,255,0.08);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(31,38,135,0.28);
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
+  border: 1.7px solid rgba(255,255,255,0.21);
+  padding: 38px 44px 28px 44px;
+  max-width: 350px;
+  text-align: center;
+}
+#login-box h2 {
+  color: #fff;
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 22px;
+  text-shadow: 0 1px 10px #0001;
+  letter-spacing: 1px;
+}
+#login-box input[type="text"], 
+#login-box input[type="password"] {
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 17px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-weight: 500;
+  outline: none;
+  transition: background 0.19s;
+}
+#login-box input::placeholder {
+  color: #dad9ec;
+  font-size: 0.98rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+#login-box button {
+  width: 100%;
+  padding: 13px 0;
+  border-radius: 22px;
+  font-size: 1.13rem;
+  background: linear-gradient(90deg, #9c70f9, #65d7fa 90%);
+  margin: 14px 0 8px 0;
+  font-weight: 600;
+  box-shadow: 0 4px 20px #a675fc35;
+}
+#login-box button:hover {
+  background: linear-gradient(90deg, #8c56e9, #37b5ee 90%);
+  transform: scale(1.04);
+}
+#login-box .register-link {
+  color: #f5f2ff;
+  font-size: 1.01rem;
+  margin-top: 16px;
+  text-shadow: 0 1px 8px #2d014c22;
+}
+#login-box .register-link a {
+  color: #60dcff;
+  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.12s;
+}
+#login-box .register-link a:hover { color: #fff }
+button {
+  background: linear-gradient(90deg, #4f8cff, #39cbe3 80%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 15px;
+  margin: 5px 6px 7px 0;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #b6d2ff22;
+  transition: background 0.15s, transform 0.12s;
+}
+button:hover {
+  background: linear-gradient(90deg, #3489f1, #30adc3 80%);
+  transform: translateY(-2px) scale(1.04);
+}
+#functions {
+  margin: 10px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px #2b304040;
+  padding: 22px 30px;
+  max-width: 430px;
+  text-align: center;
+}
+#msg {
+  margin: 14px auto;
+  color: #d8214a;
+  font-weight: 500;
+  text-align: center;
+}
+ul, li {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+ul { margin: 7px 0 18px 0; }
+li {
+  background: #f3f8ff;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  padding: 7px 13px;
+  font-size: 15px;
+  color: #295079;
+}
+h1, h3 {
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #2d3a5c;
+  margin-top: 16px;
+}
+input[type="number"], select {
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1px solid #ccd9ea;
+  font-size: 15px;
+  background: #f8fafc;
+  margin-bottom: 6px;
+}
+#cccdimg {
+  display: block;
+  margin: 22px auto 10px auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px #b2bbdd44;
+  max-width: 410px;
+}
+#taixiu-box, #hunt-box {
+  background: #f6faff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px #a69efc13;
+  padding: 18px 24px;
+  max-width: 420px;
+  margin: 0 auto 24px auto;
+  text-align: left;
+}
+#taixiu-box h3, #hunt-box h3 {
+  color: #6c36ad;
+  margin-bottom: 12px;
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+@media (max-width: 600px) {
+  #login-box, #functions, #discordinfo, #userinfo {
+    max-width: 98vw;
+    padding: 10vw 2vw;
+  }
+  h1 { font-size: 22px; }
+}

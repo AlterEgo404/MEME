@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse, RedirectResponse, HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 import json
 import datetime
 from PIL import Image, ImageDraw, ImageFont
@@ -35,6 +36,11 @@ user_col = db["user"]       # Tên collection (giống như table trong SQL)
 misc_col = db["misc"]       # Nếu chưa có sẽ tự tạo
 
 app = FastAPI()
+
+# Mount static folder
+app.mount("/static", StaticFiles(directory="static"), name="static")
+# Cấu hình templates folder
+templates = Jinja2Templates(directory="templates")
 
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -94,6 +100,10 @@ def link_discord(user_id: str):
         f"&state={state}"
     )
     return RedirectResponse(discord_oauth_url)
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/login/discord")
 def login_discord():
@@ -747,8 +757,6 @@ async def api_study(request: Request):
         }}
     )
     return {"success": True, "msg": "Bạn vừa học xong ra chơi thôi!", "smart": smart}
-
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
