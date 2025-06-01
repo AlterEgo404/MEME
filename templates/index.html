@@ -10,6 +10,9 @@
   <div id="login-box">
     <h2>Đăng nhập với Discord</h2>
     <button onclick="window.location='/login/discord'">Đăng nhập bằng Discord</button>
+    <div class="register-link">
+      <p>Chưa có tài khoản? <a href="https://discord.gg/SMFSW4uQcj">Đăng kí</a></p>
+    </div>
     <p id="msg"></p>
   </div>
   <!-- MAIN CONTENT, chỉ hiện khi đăng nhập -->
@@ -28,7 +31,6 @@
         <button onclick="showTaixiu()">Tài xỉu</button>
         <button onclick="showHunt()">Đi săn</button>
         <button onclick="logout()">Đăng xuất</button>
-        <button onclick="linkDiscord()" id="link-discord-btn" style="display:none;">Liên kết Discord</button>
       </div>
       <div id="userinfo"></div>
       <div id="content-box"></div>
