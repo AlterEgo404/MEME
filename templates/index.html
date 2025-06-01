@@ -17,6 +17,7 @@
   </div>
   <!-- MAIN CONTENT, chỉ hiện khi đăng nhập -->
   <div id="main-content" style="display:none;">
+    <div id="userinfo"></div>
     <div class="ribbon-menu">
       <span class="ribbon-tab active" onclick="switchTab('account')">Tài khoản</span>
       <span class="ribbon-tab" onclick="switchTab('transaction')">Giao dịch</span>
@@ -91,19 +92,22 @@
         document.getElementById("main-content").style.display = "none";
       }
     }
+
     // Hiển thị tab login/register/discord
     function showTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
       document.getElementById(tabId).style.display = '';
-    }  
+    }
+
     // Khi đã login thành công
     function setUser(uid) {
       localStorage.setItem('uid', uid);
       document.getElementById('login-box').style.display = 'none';
       document.getElementById('main-content').style.display = '';
       getUserInfo();
-      switchTab('account');
+      switchTab('account'); // hoặc tab mặc định khác
     }
+
     // Đăng xuất
     function logout() {
       localStorage.clear();
@@ -112,12 +116,14 @@
       document.getElementById('userinfo').innerHTML = '';
       document.getElementById('shopinfo').innerHTML = '';
     }
+
     // Lấy uid hiện tại
     function getUID() {
       return localStorage.getItem('uid');
     }
+
     // Hiện thông tin user
-    function getUserInfoTo(selector) {
+    function getUserInfo() {
       let uid = getUID();
       let avatar = localStorage.getItem('avatar');
       let username = localStorage.getItem('username');
@@ -132,8 +138,8 @@
             }
             html += "<b>Thông tin tài khoản:</b><br>";
             html += "Điểm: " + user.points + "<br>";
-            html += "Trí lực: " + user.smart + "<br>";
-            html += "Kho đồ: ";
+            html += "Smart: " + user.smart + "<br>";
+            html += "Items: ";
             if (Object.keys(user.items).length > 0) {
               html += "<ul>";
               for(let key in user.items) {
@@ -143,12 +149,15 @@
             } else {
               html += " (Trống)";
             }
-            document.querySelector(selector).innerHTML = html;
+            document.getElementById("userinfo").innerHTML = html;
           }
         });
     }
+
   </script>
+
   <!-- ========== CÁC HÀM CHỨC NĂNG ========== -->
+
   <script>
     function daily() {
       let uid = getUID();
@@ -163,6 +172,7 @@
           if (data.success) getUserInfo();
         });
     }
+
     function getShop() {
       let uid = getUID();
       fetch('/api/user/' + uid)
@@ -191,6 +201,7 @@
             });
         });
     }
+
     function buyItem(id) {
       let uid = getUID();
       let sl = prompt("Nhập số lượng muốn mua:", 1);
@@ -207,6 +218,7 @@
         getShop();
       });
     }
+
     function sellItemPrompt(item_id, item_name, maxQty) {
       let uid = getUID();
       let sl = prompt(`Nhập số lượng muốn bán (Bạn có: ${maxQty}):`, 1);
@@ -224,6 +236,7 @@
         getShop();
       });
     }
+
     function showJar() {
       fetch('/api/jar')
         .then(res => res.json())
@@ -234,6 +247,7 @@
           }
         });
     }
+
     function showCCCD() {
       let uid = getUID();
       let avatar = localStorage.getItem('avatar');
@@ -245,6 +259,7 @@
       document.getElementById("content-box").innerHTML =
         `<img id="cccdimg" width="400" style="margin:22px auto 10px auto; display:block;" src="${url}">`;
     }
+
     function showLeaderboard() {
       fetch('/api/leaderboard/a')
         .then(res => res.json())
@@ -257,6 +272,7 @@
           document.getElementById("content-box").innerHTML = html;
         });
     }
+
     function study() {
       let uid = getUID();
       fetch('/api/study', {
@@ -270,6 +286,7 @@
         getUserInfo();
       });
     }
+
     function showTaixiu() {
       document.getElementById("content-box").innerHTML = `
         <div id="taixiu-box">
@@ -280,6 +297,7 @@
         </div>
       `;
     }
+
     function playOu(choice) {
       let uid = getUID();
       let bet = document.getElementById("ou_bet").value;
@@ -302,6 +320,7 @@
         }
       });
     }
+
     function showHunt() {
       document.getElementById("content-box").innerHTML = `
         <div id="hunt-box">
@@ -317,6 +336,7 @@
         </div>
       `;
     }
+
     function hunt() {
       let uid = getUID();
       let weapon = document.getElementById("hunt_weapon").value;
@@ -332,6 +352,7 @@
         getUserInfo();
       });
     }
+
   </script>
 </body>
 </html>

@@ -50,12 +50,6 @@
   </div>
 
   <script>
-    // Hiển thị tab login/register/discord
-    function showTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-      document.getElementById(tabId).style.display = '';
-    }
-
     // Auto đăng nhập nếu đã lưu
     window.onload = function() {
       let uid = localStorage.getItem('uid');
@@ -69,37 +63,11 @@
       }
     }
 
-    // Đăng nhập bằng email/user
-    function loginEmail() {
-      var user = document.getElementById("login_user").value;
-      var pass = document.getElementById("login_pass").value;
-      if (!user || !pass) return alert("Điền đủ thông tin!");
-      fetch('/api/login', {
-        method: 'POST',
-        body: JSON.stringify({user_id: user, password: pass}),
-        headers: {'Content-Type': 'application/json'}
-      }).then(r => r.json()).then(data => {
-        document.getElementById("msg").innerText = data.msg;
-        if (data.success) {
-          setUser(user);
-        }
-      });
-    }
-
-    // Đăng ký tài khoản email
-    function registerEmail() {
-      var user = document.getElementById("reg_user").value;
-      var email = document.getElementById("reg_email").value;
-      var pass = document.getElementById("reg_pass").value;
-      if (!user || !email || !pass) return alert("Điền đủ thông tin!");
-      fetch('/api/register', {
-        method: 'POST',
-        body: JSON.stringify({user_id: user, email: email, password: pass}),
-        headers: {'Content-Type': 'application/json'}
-      }).then(r => r.json()).then(data => {
-        document.getElementById("msg").innerText = data.msg;
-      });
-    }
+    // Hiển thị tab login/register/discord
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+      document.getElementById(tabId).style.display = '';
+    }  
 
     // Thiết lập user sau khi login thành công
     function setUser(uid) {
@@ -125,12 +93,6 @@
       document.getElementById('main-content').style.display = 'none';
       document.getElementById('userinfo').innerHTML = '';
       document.getElementById('shopinfo').innerHTML = '';
-    }
-
-    // Liên kết Discord
-    function linkDiscord() {
-      let uid = localStorage.getItem('uid');
-      window.location = '/link/discord?user_id=' + encodeURIComponent(uid);
     }
 
     // Lấy uid hiện tại
