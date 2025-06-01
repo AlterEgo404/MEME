@@ -34,30 +34,13 @@
   <script>
     function switchTab(tab) {
         document.querySelectorAll('.ribbon-tab').forEach((t, i) => {
-            t.classList.toggle('active', (tab === 'games' && i === 0) || (tab === 'chat' && i === 1));
+            t.classList.toggle('active', (tab === 'games' && i === 0));
         });
         document.getElementById('games-tab').style.display = tab === 'games' ? '' : 'none';
-        document.getElementById('chat-tab').style.display = tab === 'chat' ? '' : 'none';
-    }
-
-    // Chat đơn giản (client-only, chưa lưu DB)
-    function sendChat() {
-        let chatWindow = document.getElementById('chat-window');
-        let input = document.getElementById('chat-input');
-        let text = input.value.trim();
-        if (!text) return;
-        let div = document.createElement('div');
-        div.style.margin = '5px 0';
-        div.innerHTML = '<b>Bạn:</b> ' + text;
-        chatWindow.appendChild(div);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-        input.value = '';
-        // Nếu muốn gửi lên backend, bạn thêm fetch('/api/chat', { ... })
     }
   </script>
   <div class="ribbon-menu">
       <span class="ribbon-tab active" onclick="switchTab('games')">Trò chơi</span>
-      <span class="ribbon-tab" onclick="switchTab('chat')">Trò chuyện</span>
   </div>
   <div id="games-tab" class="tab-content">
     <div id="main-content" style="display:none;">
@@ -391,15 +374,6 @@
         });
       }
     </script>
-  </div>
-  <div id="chat-tab" class="tab-content" style="display:none;">
-      <div id="chat-window" style="height:240px;overflow-y:auto;background:#f8fafc;padding:12px;border-radius:6px;margin-bottom:10px;">
-        <!-- Tin nhắn sẽ hiện ở đây -->
-      </div>
-      <div style="display:flex;">
-        <input id="chat-input" type="text" placeholder="Nhập tin nhắn..." style="flex:1;padding:7px;border-radius:6px;border:1px solid #ccd9ea;">
-        <button onclick="sendChat()" style="margin-left:8px;">Gửi</button>
-      </div>
   </div>
 </body>
 </html>
