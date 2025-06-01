@@ -21,16 +21,25 @@
         <span class="ribbon-tab active" onclick="switchTab('games')">Trò chơi</span>
     </div>
     <div id="games-tab" class="tab-content">
-      <div id="functions">
-        <button onclick="daily()">Nhận quà Daily</button>
-        <button onclick="getShop()">Xem Shop</button>
-        <button onclick="showJar()">Xem hũ Jackpot</button>
-        <button onclick="showCCCD()">Xem ảnh CCCD</button>
-        <button onclick="showLeaderboard()">Xem bảng xếp hạng</button>
-        <button onclick="study()">Học tăng trình độ</button>
-        <button onclick="showTaixiu()">Tài xỉu</button>
-        <button onclick="showHunt()">Đi săn</button>
-        <button onclick="logout()">Đăng xuất</button>
+      <div class="ribbon-menu-game">
+        <span class="ribbon-tab active" onclick="switchTab('account')">Tài khoản</span>
+        <span class="ribbon-tab active" onclick="switchTab('trade')">Giao dịch</span>
+        <span class="ribbon-tab active" onclick="switchTab('money')">Tiền tệ</span>
+        <span class="ribbon-tab active" onclick="switchTab('smart')">Thông minh</span>
+        <span class="ribbon-tab active" onclick="switchTab('plant')">Cây cối</span>
+      </div>
+      <div id="account-tab" class="tab-account-content">
+        <div id="functions">
+          <button onclick="daily()">Nhận quà Daily</button>
+          <button onclick="getShop()">Xem Shop</button>
+          <button onclick="showJar()">Xem hũ Jackpot</button>
+          <button onclick="showCCCD()">Xem ảnh CCCD</button>
+          <button onclick="showLeaderboard()">Xem bảng xếp hạng</button>
+          <button onclick="study()">Học tăng trình độ</button>
+          <button onclick="showTaixiu()">Tài xỉu</button>
+          <button onclick="showHunt()">Đi săn</button>
+          <button onclick="logout()">Đăng xuất</button>
+        </div>
       </div>
       <div id="userinfo"></div>
       <div id="content-box"></div>
@@ -38,10 +47,22 @@
   </div>
     <script>
       function switchTab(tab) {
-          document.querySelectorAll('.ribbon-tab').forEach((t, i) => {
-              t.classList.toggle('active', (tab === 'games' && i === 0));
-          });
-          document.getElementById('games-tab').style.display = tab === 'games' ? '' : 'none';
+        document.querySelectorAll('.ribbon-tab').forEach((t, i) => {
+            t.classList.toggle('active', 
+            (tab === 'games' && i === 0) ||
+            (tab === 'account' && i === 1) ||
+            (tab === 'trade' && i === 2) ||
+            (tab === 'money' && i === 3) ||
+            (tab === 'smart' && i === 4) ||
+            (tab === 'plant' && i === 5)
+          );
+        });
+        document.getElementById('games-tab').style.display = tab === 'games' ? '' : 'none';
+        document.getElementById('account-tab').style.display = tab === 'account' ? '' : 'none';
+        document.getElementById('trade-tab').style.display = tab === 'trade' ? '' : 'none';
+        document.getElementById('money-tab').style.display = tab === 'money' ? '' : 'none';
+        document.getElementById('smart-tab').style.display = tab === 'smart' ? '' : 'none';
+        document.getElementById('plant-tab').style.display = tab === 'plant' ? '' : 'none';
       }
     </script>
     <script>
