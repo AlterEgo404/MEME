@@ -31,19 +31,11 @@
     <p id="msg"></p>
   </div>
   <!-- MAIN CONTENT, chỉ hiện khi đăng nhập -->
-  <script>
-    function switchTab(tab) {
-        document.querySelectorAll('.ribbon-tab').forEach((t, i) => {
-            t.classList.toggle('active', (tab === 'games' && i === 0));
-        });
-        document.getElementById('games-tab').style.display = tab === 'games' ? '' : 'none';
-    }
-  </script>
-  <div class="ribbon-menu">
-      <span class="ribbon-tab active" onclick="switchTab('games')">Trò chơi</span>
-  </div>
-  <div id="games-tab" class="tab-content">
-    <div id="main-content" style="display:none;">
+  <div id="main-content" style="display:none;">
+    <div class="ribbon-menu">
+        <span class="ribbon-tab active" onclick="switchTab('games')">Trò chơi</span>
+    </div>
+    <div id="games-tab" class="tab-content">
       <div id="functions">
         <button onclick="daily()">Nhận quà Daily</button>
         <button onclick="getShop()">Xem Shop</button>
@@ -59,6 +51,15 @@
       <div id="userinfo"></div>
       <div id="content-box"></div>
     </div>
+  </div>
+    <script>
+      function switchTab(tab) {
+          document.querySelectorAll('.ribbon-tab').forEach((t, i) => {
+              t.classList.toggle('active', (tab === 'games' && i === 0));
+          });
+          document.getElementById('games-tab').style.display = tab === 'games' ? '' : 'none';
+      }
+    </script>
     <script>
       // Hiển thị tab login/register/discord
       function showTab(tabId) {
